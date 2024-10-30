@@ -196,6 +196,5 @@ export const MOCK_CATGORYS = [
   {
     menus: [...dashboardMenus, ...createDemosMenus('user')],
     username: 'jack',
-    test: '123',
   },
 ];
