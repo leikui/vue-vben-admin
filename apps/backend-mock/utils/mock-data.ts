@@ -184,3 +184,17 @@ export const MOCK_MENUS = [
     username: 'jack',
   },
 ];
+export const MOCK_CATGORYS = [
+  {
+    menus: [...dashboardMenus, ...createDemosMenus('super')],
+    username: 'vben',
+  },
+  {
+    menus: [...dashboardMenus, ...createDemosMenus('admin')],
+    username: 'admin',
+  },
+  {
+    menus: [...dashboardMenus, ...createDemosMenus('user')],
+    username: 'jack',
+  },
+];
