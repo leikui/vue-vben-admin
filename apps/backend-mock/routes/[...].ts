@@ -7,6 +7,7 @@ export default defineEventHandler(() => {
 <li><a href="/api/menu">/api/menu/all</a></li>
 <li><a href="/api/auth/codes">/api/auth/codes</a></li>
 <li><a href="/api/auth/login">/api/auth/login</a></li>
+<li><a href="/api/category/list">/api/category/list</a></li>
 </ul>
 `;
 });

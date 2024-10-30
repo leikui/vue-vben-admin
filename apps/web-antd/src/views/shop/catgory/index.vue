@@ -4,6 +4,9 @@ import { Page } from '@vben/common-ui';
 import { Card, message, Table } from 'ant-design-vue';
 
 import { useVbenForm } from '#/adapter/form';
+import { getCategoryApi } from "#/api";
+import { ref } from 'vue';
+
 
 const [QueryForm] = useVbenForm({
   // 默认展开
@@ -67,7 +70,8 @@ const [QueryForm] = useVbenForm({
   },
   wrapperClass: 'grid-cols-1 md:grid-cols-3',
 });
-function onSubmit(values: Record<string, any>) {
+async function onSubmit(values: Record<string, any>) {
+  data.value = await getCategoryApi(values)
   message.success({
     content: `form values: ${JSON.stringify(values)}`,
   });
@@ -103,6 +107,7 @@ const columns = [
     key: 'action',
   },
 ];
+const data = ref()
 </script>
 
 <template>
