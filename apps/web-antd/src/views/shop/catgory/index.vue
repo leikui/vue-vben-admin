@@ -1,12 +1,11 @@
 <script lang="ts" setup>
 import { Page } from '@vben/common-ui';
 
-import { Card, message, Table } from 'ant-design-vue';
+import { Card, message, Table, Image,Switch } from 'ant-design-vue';
 
 import { useVbenForm } from '#/adapter/form';
-import { getCategoryApi } from "#/api";
+import { getCategoryApi } from '#/api';
 import { ref } from 'vue';
-
 
 const [QueryForm] = useVbenForm({
   // 默认展开
@@ -71,7 +70,7 @@ const [QueryForm] = useVbenForm({
   wrapperClass: 'grid-cols-1 md:grid-cols-3',
 });
 async function onSubmit(values: Record<string, any>) {
-  data.value = await getCategoryApi(values)
+  data.value = await getCategoryApi(values);
   message.success({
     content: `form values: ${JSON.stringify(values)}`,
   });
@@ -103,11 +102,11 @@ const columns = [
     key: 'status',
   },
   {
-    title: 'Action',
+    title: '操作',
     key: 'action',
   },
 ];
-const data = ref()
+const data = ref();
 </script>
 
 <template>
@@ -117,7 +116,19 @@ const data = ref()
         <QueryForm />
       </Card>
       <Card>
-        <Table :columns="columns" :data-source="data" />
+        <Table :columns="columns" :data-source="data">
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'extra'">
+              <Image :width="50" :src="record.extra" />
+            </template>
+            <template v-if="column.key === 'type'">
+              <span>产品分类</span>
+            </template>
+            <template v-if="column.key ==='status'">
+              <Switch v-model:checked="record.status" checked-children="显示" un-checked-children="隐藏" />
+              </template>
+          </template>
+        </Table>
       </Card>
     </div>
   </Page>
