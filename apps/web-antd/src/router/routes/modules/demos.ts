@@ -23,6 +23,14 @@ const routes: RouteRecordRaw[] = [
         path: '/demos/ant-design',
         component: () => import('#/views/demos/antd/index.vue'),
       },
+      {
+        meta: {
+          title: '分类管理',
+        },
+        name: 'Category',
+        path: '/demos/category',
+        component: () => import('#/views/demos/category/index.vue'),
+      },
     ],
   },
 ];
