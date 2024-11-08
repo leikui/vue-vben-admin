@@ -1,24 +1,31 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 
-import { Page } from '@vben/common-ui';
+import { Page, useVbenModal } from '@vben/common-ui';
 
-import { message, Table } from 'ant-design-vue';
+import { message, Table, Button, Card, Image, Switch } from 'ant-design-vue';
 
 import { useVbenForm } from '#/adapter/form';
+import Add2Update from './component/Add2UpdateCategory.vue';
+import { getCategoryApi } from '#/api';
+import Add2UpdateCategory from './component/Add2UpdateCategory.vue';
 
 const param = ref([
   {
-    username: 'admin',
+    username: '全部',
+    id: '-1',
+  },
+  {
+    username: '显示',
     id: '1',
   },
   {
-    username: 'admin2',
-    id: '11',
+    username: '隐藏',
+    id: '0',
   },
 ]);
 
-const [QueryForm] = useVbenForm({
+const [QueryForm, form] = useVbenForm({
   // 默认展开
   collapsed: false,
   // 所有表单项共用，可单独在表单内覆盖
@@ -44,7 +51,7 @@ const [QueryForm] = useVbenForm({
         showSearch: false,
         fieldNames: { label: 'username', value: 'id' },
       },
-      defaultValue: '1',
+      defaultValue: '-1',
       fieldName: 'status',
       label: '状态',
     },
@@ -68,36 +75,119 @@ const [QueryForm] = useVbenForm({
   },
   wrapperClass: 'grid-cols-1 md:grid-cols-3',
 });
-function onSubmit(values: Record<string, any>) {
+async function onSubmit(values: Record<string, any>) {
+  const res = await getCategoryApi({ ...values, page: 1, pageSize: 101 });
+  dataSource.value = res;
   message.success({
     content: `form values: ${JSON.stringify(values)}`,
   });
 }
 
+onMounted(() => {
+  form.submitForm();
+});
+
 // table
 const columns = ref([
+  {
+    title: '名称',
+    dataIndex: 'name',
+    key: 'name',
+  },
   {
     title: '类型',
     dataIndex: 'type',
     key: 'type',
   },
   {
-    title: '年龄',
-    dataIndex: 'age',
-    key: 'age',
+    title: '分类图标',
+    dataIndex: 'extra',
+    key: 'extra',
   },
   {
-    title: '住址',
-    dataIndex: 'address',
-    key: 'address',
+    title: '排序',
+    dataIndex: 'sort',
+    key: 'sort',
+  },
+  {
+    title: '状态',
+    dataIndex: 'status',
+    key: 'status',
+  },
+  {
+    title: '操作',
+    key: 'action',
   },
 ]);
 const dataSource = ref();
+
+const [Modal, modalApi] = useVbenModal({
+  // 连接抽离的组件
+  connectedComponent: Add2UpdateCategory,
+  showCancelButton: false,
+  showConfirmButton: false,
+});
+function openModal(type: number, recordData?: any,pid?: number) {
+  modalApi.setData({
+    record: recordData,
+    pdata: dataSource.value,
+  });
+  modalApi.setState({
+    title: '创建产品分类',
+  });
+  if (type == 2) {
+    modalApi.setState({
+      title: '编辑产品分类',
+    });
+  }
+
+  modalApi.open();
+}
 </script>
 
 <template>
   <Page>
-    <QueryForm />
-    <Table :columns="columns" :data-source="dataSource" />
+    <Card>
+      <QueryForm />
+    </Card>
+
+    <Table
+      :columns="columns"
+      :data-source="dataSource"
+      childrenColumnName="child"
+      rowKey="id"
+      bordered
+    >
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'extra'">
+          <Image :width="30" :src="record.extra" />
+        </template>
+        <template v-if="column.key === 'action'">
+          <Button
+            type="link"
+            :disabled="record.pid != 0"
+            @click="openModal(1, record)"
+            >添加子目录</Button
+          >
+          <Button type="link" @click="openModal(2, record)">编辑</Button>
+          <Button type="link" danger>删除</Button>
+        </template>
+        <template v-if="column.key === 'type'">
+          <div>产品分类</div>
+        </template>
+        <template v-if="column.key === 'status'">
+          <Switch
+            v-model:checked="record.status"
+            checked-children="开"
+            un-checked-children="关"
+          />
+        </template>
+      </template>
+      <template #title
+        ><Button type="primary" @click="openModal(1)">新增</Button></template
+      >
+    </Table>
+
+    <Modal />
   </Page>
 </template>
