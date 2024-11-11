@@ -1,24 +1,11 @@
 <script lang="ts" setup>
-import { useVbenModal } from '@vben/common-ui';
-import { message } from 'ant-design-vue';
-
-import { useVbenForm, z } from '#/adapter/form';
 import { ref } from 'vue';
+import { Button, message, Space } from 'ant-design-vue';
 
-const param = ref([
-  {
-    username: '全部',
-    id: '-1',
-  },
-  {
-    username: '显示',
-    id: '1',
-  },
-  {
-    username: '隐藏',
-    id: '0',
-  },
-]);
+import { useVbenModal } from '@vben/common-ui';
+import { useVbenForm } from '#/adapter/form';
+
+const data = ref();
 
 const [Modal, modalApi] = useVbenModal({
   onCancel() {
@@ -29,22 +16,63 @@ const [Modal, modalApi] = useVbenModal({
   },
   onOpenChange(isOpen: boolean) {
     if (isOpen) {
-      data.value = modalApi.getData<Record<string, any>>().record;
-      pdata.value = modalApi.getData<Record<string, any>>().pdata;
-      formApi.setFieldValue('pid', pdata.value);
+      data.value = modalApi.getData<Record<string, any>>();
+      console.log(data.value);
 
-      pid.value = modalApi.getData<Record<string, any>>().pid;
+      if (data.value.record != undefined) {
+        //编辑 -》pid == 0 pid ！= 0
+        if (data.value.action == 2 && data.value.record.pid == 0) {
+          formApi.setFieldValue('pid', '根目录');
+          formApi.updateSchema([
+            {
+              dependencies: {
+                disabled() {
+                  return true;
+                },
+                triggerFields: ['pid'],
+              },
+              fieldName: 'pid',
+            },
+          ]);
+        } else if (data.value.action == 2 && data.value.record.pid != 0) {
+          formApi.updateSchema([
+            {
+              dependencies: {
+                disabled() {
+                  return false;
+                },
+                triggerFields: ['pid'],
+              },
+              fieldName: 'pid',
+            },
+          ]);
+          formApi.setFieldValue('pid', data.value.record.pid);
 
-      console.log(pdata.value);
+        }else {
+          formApi.setFieldValue('pid', data.value.record.id);
+
+        }
+
+      }
+
+      formApi.updateSchema([
+        {
+          componentProps: {
+            options: data.value.pdata,
+          },
+          fieldName: 'pid',
+        },
+        {
+          defaultValue: data.value?.action ==1? '': data.value.record?.name??'',
+          fieldName: 'name',
+        }
+      ]);
     }
   },
 });
 
-const data = ref();
-const pid = ref(0);
-const pdata = ref();
-
-const [Form, formApi] = useVbenForm({
+//form 数据
+const [BaseForm, formApi] = useVbenForm({
   // 所有表单项共用，可单独在表单内覆盖
   commonConfig: {
     // 所有表单项
@@ -52,18 +80,19 @@ const [Form, formApi] = useVbenForm({
       class: 'w-full',
     },
   },
+  // 使用 tailwindcss grid布局
   // 提交函数
   handleSubmit: onSubmit,
   // 垂直布局，label和input在不同行，值为vertical
-  // 水平布局，label和input在同一行
   layout: 'horizontal',
+  // 水平布局，label和input在同一行
   schema: [
     {
       // 组件需要在 #/adapter.ts内注册，并加上类型
       component: 'Input',
       // 对应组件的参数
       componentProps: {
-        placeholder: '分类名称',
+        placeholder: '请输入分类名称',
       },
       // 字段名
       fieldName: 'name',
@@ -75,45 +104,24 @@ const [Form, formApi] = useVbenForm({
       component: 'Select',
       componentProps: {
         allowClear: false,
-        filterOption: false,
-        options: pdata.value,
-        placeholder: '请选择',
-        showSearch: false,
+        filterOption: true,
+        options: [],
         fieldNames: { label: 'name', value: 'id' },
+        placeholder: '请选择父级分类',
+        showSearch: false,
       },
-      // defaultValue: 245,
       fieldName: 'pid',
       label: '父级分类',
-      dependencies: {
-        componentProps(values) {
-          console.log('data,',data.value);
-
-          formApi.setValues(data.value);
-          return {
-            options: pdata.value,
-            defaultValue: data.value?.pid ===0? data.value?.id  : 0,
-          };
-        },
-        disabled(values) {
-          console.log('values,',values);
-
-          return !(data.value != null && data.value != undefined) && data.value?.pid === 0 ;
-        },
-
-        triggerFields: ['id'],
-      },
+      rules: 'required',
     },
     {
-      component: 'InputNumber',
-      componentProps: {
-        placeholder: '排序',
-      },
-      fieldName: 'number',
-      defaultValue: 0,
-      label: '排序',
+      component: 'Input',
+      fieldName: 'field3',
+      label: '自定义组件(slot)',
+      rules: 'required',
     },
   ],
-  wrapperClass: 'grid-cols-1',
+  wrapperClass: 'grid-cols-1 md:grid-cols-1',
 });
 
 function onSubmit(values: Record<string, any>) {
@@ -121,9 +129,14 @@ function onSubmit(values: Record<string, any>) {
     content: `form values: ${JSON.stringify(values)}`,
   });
 }
+
 </script>
 <template>
-  <Modal>
-    <Form />
+  <Modal title="数据共享示例">
+    <BaseForm >
+      <template #field3="slotProps">
+      <Input placeholder="请输入" v-bind="slotProps" />
+    </template>
+    </BaseForm>
   </Modal>
 </template>

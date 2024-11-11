@@ -131,6 +131,7 @@ function openModal(type: number, recordData?: any,pid?: number) {
   modalApi.setData({
     record: recordData,
     pdata: dataSource.value,
+    action: type,
   });
   modalApi.setState({
     title: '创建产品分类',
@@ -156,6 +157,7 @@ function openModal(type: number, recordData?: any,pid?: number) {
       :data-source="dataSource"
       childrenColumnName="child"
       rowKey="id"
+      :pagination="false"
       bordered
     >
       <template #bodyCell="{ column, record }">
