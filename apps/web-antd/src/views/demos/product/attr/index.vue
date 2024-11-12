@@ -107,7 +107,7 @@ function openModal(type: number, recordData?: any,pid?: number) {
   modalApi.open();
 }
 
-const showDeleteConfirm = () => {
+const showDeleteConfirm = (attrId) => {
   Modal.confirm({
     title: '删除产品分类',
     content: '确认删除产品分类？',
@@ -152,7 +152,7 @@ const parseRuleDetail = (ruleDetail: any) => {
 
         <template v-if="column.key === 'action'">
           <Button type="link" @click="openModal(2, record)">编辑</Button>
-          <Button type="link" danger @click="showDeleteConfirm" >删除</Button>
+          <Button type="link" danger @click="showDeleteConfirm(record.id)" >删除</Button>
         </template>
         <template v-if="column.key === 'ruleValue'">
           <div>{{parseRuleDetail(record.ruleValue)}}</div>
