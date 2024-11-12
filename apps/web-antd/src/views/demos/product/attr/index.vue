@@ -3,27 +3,12 @@ import { onMounted, ref } from 'vue';
 
 import { Page, useVbenModal } from '@vben/common-ui';
 
-import { message, Table, Button, Card, Image, Switch } from 'ant-design-vue';
+import { message, Table, Button, Card, Image, Switch,Modal } from 'ant-design-vue';
 
 import { useVbenForm } from '#/adapter/form';
-import Add2Update from './component/Add2UpdateCategory.vue';
-import { getCategoryApi } from '#/api';
-import Add2UpdateCategory from './component/Add2UpdateCategory.vue';
+import Attr from './component/attr.vue'
+import { getAttrApi } from '#/api';
 
-const param = ref([
-  {
-    username: '全部',
-    id: '-1',
-  },
-  {
-    username: '显示',
-    id: '1',
-  },
-  {
-    username: '隐藏',
-    id: '0',
-  },
-]);
 
 const [QueryForm, form] = useVbenForm({
   // 默认展开
@@ -42,20 +27,6 @@ const [QueryForm, form] = useVbenForm({
   layout: 'horizontal',
   schema: [
     {
-      component: 'Select',
-      componentProps: {
-        allowClear: true,
-        filterOption: false,
-        options: param.value,
-        placeholder: '请选择',
-        showSearch: false,
-        fieldNames: { label: 'username', value: 'id' },
-      },
-      defaultValue: '-1',
-      fieldName: 'status',
-      label: '状态',
-    },
-    {
       // 组件需要在 #/adapter.ts内注册，并加上类型
       component: 'Input',
       // 对应组件的参数
@@ -65,7 +36,7 @@ const [QueryForm, form] = useVbenForm({
       // 字段名
       fieldName: 'name',
       // 界面显示的label
-      label: '名称',
+      label: '规格名称',
     },
   ],
   // 是否可展开
@@ -76,8 +47,8 @@ const [QueryForm, form] = useVbenForm({
   wrapperClass: 'grid-cols-1 md:grid-cols-3',
 });
 async function onSubmit(values: Record<string, any>) {
-  const res = await getCategoryApi({ ...values, page: 1, pageSize: 101 });
-  dataSource.value = res;
+  const res = await getAttrApi({ ...values, page: 1, pageSize: 101 });
+  dataSource.value = res.items;
   message.success({
     content: `form values: ${JSON.stringify(values)}`,
   });
@@ -90,30 +61,21 @@ onMounted(() => {
 // table
 const columns = ref([
   {
-    title: '名称',
-    dataIndex: 'name',
-    key: 'name',
+    title: 'ID',
+    dataIndex: 'id',
+    key: 'id',
   },
   {
-    title: '类型',
-    dataIndex: 'type',
-    key: 'type',
+    title: '规格名称',
+    dataIndex: 'ruleName',
+    key: 'ruleName',
   },
   {
-    title: '分类图标',
-    dataIndex: 'extra',
-    key: 'extra',
+    title: '商品规格属性',
+    dataIndex: 'ruleValue',
+    key: 'ruleValue',
   },
-  {
-    title: '排序',
-    dataIndex: 'sort',
-    key: 'sort',
-  },
-  {
-    title: '状态',
-    dataIndex: 'status',
-    key: 'status',
-  },
+
   {
     title: '操作',
     key: 'action',
@@ -121,16 +83,16 @@ const columns = ref([
 ]);
 const dataSource = ref();
 
-const [Modal, modalApi] = useVbenModal({
+const [ModalCom, modalApi] = useVbenModal({
   // 连接抽离的组件
-  connectedComponent: Add2UpdateCategory,
-  showCancelButton: false,
-  showConfirmButton: false,
+  connectedComponent: Attr,
+  showCancelButton: true,
+  showConfirmButton: true,
+  class: 'w-[60%]',
 });
 function openModal(type: number, recordData?: any,pid?: number) {
   modalApi.setData({
-    record: recordData,
-    pdata: dataSource.value,
+    attr: recordData,
     action: type,
   });
   modalApi.setState({
@@ -144,6 +106,34 @@ function openModal(type: number, recordData?: any,pid?: number) {
 
   modalApi.open();
 }
+
+const showDeleteConfirm = () => {
+  Modal.confirm({
+    title: '删除产品分类',
+    content: '确认删除产品分类？',
+    okText: '删除',
+    okType: 'danger',
+    cancelText: '取消',
+    onOk() {
+      console.log('OK');
+    },
+    onCancel() {
+      console.log('Cancel');
+    },
+  });
+};
+
+
+//格式化数据方法
+const parseRuleDetail = (ruleDetail: any) => {
+  const rul = JSON.parse(ruleDetail);
+  let result = '';
+  rul.forEach((item: any) => {
+    result += `[${item.value}:(${item.detail})],`;
+  });
+  return result;
+}
+
 </script>
 
 <template>
@@ -155,27 +145,17 @@ function openModal(type: number, recordData?: any,pid?: number) {
     <Table
       :columns="columns"
       :data-source="dataSource"
-      childrenColumnName="child"
       rowKey="id"
-      :pagination="false"
       bordered
     >
       <template #bodyCell="{ column, record }">
-        <template v-if="column.key === 'extra'">
-          <Image :width="30" :src="record.extra" />
-        </template>
+
         <template v-if="column.key === 'action'">
-          <Button
-            type="link"
-            :disabled="record.pid != 0"
-            @click="openModal(1, record)"
-            >添加子目录</Button
-          >
           <Button type="link" @click="openModal(2, record)">编辑</Button>
-          <Button type="link" danger>删除</Button>
+          <Button type="link" danger @click="showDeleteConfirm" >删除</Button>
         </template>
-        <template v-if="column.key === 'type'">
-          <div>产品分类</div>
+        <template v-if="column.key === 'ruleValue'">
+          <div>{{parseRuleDetail(record.ruleValue)}}</div>
         </template>
         <template v-if="column.key === 'status'">
           <Switch
@@ -190,6 +170,6 @@ function openModal(type: number, recordData?: any,pid?: number) {
       >
     </Table>
 
-    <Modal />
+    <ModalCom />
   </Page>
 </template>

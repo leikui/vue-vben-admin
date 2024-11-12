@@ -767,3 +767,205 @@ export const MOCK_CATEGORY = [
     ]
   }
 ];
+export const MOCK_PRODUCT_ATTR = [
+  {
+    "id": 272,
+    "ruleName": "大小粗细",
+    "ruleValue": "[{\"value\":\"大小\",\"detail\":[\"小\",\"中\",\"大\"],\"inputVisible\":false},{\"value\":\"粗细\",\"detail\":[\"细\",\"中\",\"小\"],\"inputVisible\":false}]"
+  },
+  {
+    "id": 271,
+    "ruleName": "测试规格20241109",
+    "ruleValue": "[{\"value\":\"Test_GG\",\"detail\":[\"ss\",\"bb\"],\"inputVisible\":false},{\"value\":\"Test_MM\",\"detail\":[\"ll\",\"tt\"],\"inputVisible\":false}]"
+  },
+  {
+    "id": 270,
+    "ruleName": "000",
+    "ruleValue": "[{\"value\":\"00\",\"detail\":[\"00\",\"0000\"],\"inputVisible\":false}]"
+  },
+  {
+    "id": 269,
+    "ruleName": "test1",
+    "ruleValue": "[{\"value\":\"1\",\"detail\":[\"11\",\"22\",\"33\"],\"inputVisible\":false}]"
+  },
+  {
+    "id": 268,
+    "ruleName": "55",
+    "ruleValue": "[{\"value\":\"55\",\"detail\":[\"5\"]}]"
+  },
+  {
+    "id": 267,
+    "ruleName": "test111",
+    "ruleValue": "[{\"value\":\"rrr\",\"detail\":[\"11\"]}]"
+  },
+  {
+    "id": 266,
+    "ruleName": "666666",
+    "ruleValue": "[{\"value\":\"11\",\"detail\":[\"11\"]},{\"value\":\"22\",\"detail\":[\"22\"]}]"
+  },
+  {
+    "id": 265,
+    "ruleName": "yilin",
+    "ruleValue": "[{\"value\":\"1\",\"detail\":[\"10\"]}]"
+  },
+  {
+    "id": 264,
+    "ruleName": "阿巴阿巴",
+    "ruleValue": "[{\"value\":\"阿巴\",\"detail\":[\"20254\"]}]"
+  },
+  {
+    "id": 263,
+    "ruleName": "王大大",
+    "ruleValue": "[{\"value\":\"打唔打\",\"detail\":[\"带娃大\"]}]"
+  },
+  {
+    "id": 262,
+    "ruleName": "qwer",
+    "ruleValue": "[{\"value\":\"b\",\"detail\":[\"c\",\"d\",\"e\"],\"inputVisible\":false}]"
+  },
+  {
+    "id": 261,
+    "ruleName": "测试试试",
+    "ruleValue": "[{\"value\":\"辣度\",\"detail\":[\"中等\",\"轻度\",\"重度\"],\"inputVisible\":false}]"
+  },
+  {
+    "id": 260,
+    "ruleName": "wed",
+    "ruleValue": "[{\"value\":\"121212\",\"detail\":[\"1212112\"]}]"
+  },
+  {
+    "id": 259,
+    "ruleName": "期待",
+    "ruleValue": "[{\"value\":\"颜色\",\"detail\":[\"红色\",\"黑色\",\"白色\"],\"inputVisible\":false},{\"value\":\"口味\",\"detail\":[\"甜\",\"辣\",\"微辣\"],\"inputVisible\":false}]"
+  },
+  {
+    "id": 258,
+    "ruleName": "111-=111",
+    "ruleValue": "[{\"value\":\"11\",\"detail\":[\"11\"]}]"
+  },
+  {
+    "id": 257,
+    "ruleName": "外网",
+    "ruleValue": "[{\"value\":\"1212\",\"detail\":[\"12\"]}]"
+  },
+  {
+    "id": 256,
+    "ruleName": "对的",
+    "ruleValue": "[{\"value\":\"安按\",\"detail\":[\"对的\"]}]"
+  },
+  {
+    "id": 255,
+    "ruleName": "规格测出猜测",
+    "ruleValue": "[{\"value\":\"234\",\"detail\":[\"243\"],\"inputVisible\":true}]"
+  },
+  {
+    "id": 254,
+    "ruleName": "规格哒哒哒",
+    "ruleValue": "[{\"value\":\"颜色\",\"detail\":[\"红褐色\",\"黄色\"],\"inputVisible\":false},{\"value\":\"尺寸\",\"detail\":[\"cm\",\"qq\"],\"inputVisible\":false}]"
+  },
+  {
+    "id": 253,
+    "ruleName": "测试规格哒哒哒哒哒哒哒哒哒",
+    "ruleValue": "[{\"value\":\"颜色\",\"detail\":[\"红褐色\",\"红色\"],\"inputVisible\":false}]"
+  },
+  {
+    "id": 252,
+    "ruleName": "1dfg",
+    "ruleValue": "[{\"value\":\"2\",\"detail\":[\"3\"]}]"
+  },
+  {
+    "id": 251,
+    "ruleName": "dwad",
+    "ruleValue": "[{\"value\":\"1\",\"detail\":[\"11\"]}]"
+  },
+  {
+    "id": 250,
+    "ruleName": "e",
+    "ruleValue": "[{\"value\":\"e\",\"detail\":[\"e\"]}]"
+  },
+  {
+    "id": 249,
+    "ruleName": "ASFS",
+    "ruleValue": "[{\"value\":\"213\",\"detail\":[\"124\"]},{\"value\":\"214\",\"detail\":[\"124\"]},{\"value\":\"124\",\"detail\":[\"142\"]}]"
+  },
+  {
+    "id": 248,
+    "ruleName": "测试规格2355235",
+    "ruleValue": "[{\"value\":\"32\",\"detail\":[\"523\",\"236\",\"423\",\"35\",\"623\",\"5436\"],\"inputVisible\":false}]"
+  },
+  {
+    "id": 247,
+    "ruleName": "尺码",
+    "ruleValue": "[{\"value\":\"尺码\",\"detail\":[\"S\",\"M\",\"L\"],\"inputVisible\":false}]"
+  },
+  {
+    "id": 246,
+    "ruleName": "fafa",
+    "ruleValue": "[{\"value\":\"faf\",\"detail\":[\"22\"],\"inputVisible\":true}]"
+  },
+  {
+    "id": 245,
+    "ruleName": "鞋码",
+    "ruleValue": "[{\"value\":\"标准鞋码\",\"detail\":[\"35\",\"36\",\"37\",\"38\",\"39\",\"40\"],\"inputVisible\":false}]"
+  },
+  {
+    "id": 244,
+    "ruleName": "上衣",
+    "ruleValue": "[{\"value\":\"尺码\",\"detail\":[\"L\",\"XL\",\"XXL\",\"M\"],\"inputVisible\":false}]"
+  },
+  {
+    "id": 243,
+    "ruleName": "3",
+    "ruleValue": "[{\"value\":\"3\",\"detail\":[\"3\"]}]"
+  },
+  {
+    "id": 242,
+    "ruleName": "1231223333",
+    "ruleValue": "[{\"value\":\"1\",\"detail\":[\"1\"]}]"
+  },
+  {
+    "id": 241,
+    "ruleName": "fgfdg",
+    "ruleValue": "[{\"value\":\"fgf\",\"detail\":[\"ff\"]},{\"value\":\"rrr\",\"detail\":[\"rrr\"]}]"
+  },
+  {
+    "id": 240,
+    "ruleName": "12131",
+    "ruleValue": "[{\"value\":\"吊袜带\",\"detail\":[\"打唔打\"]}]"
+  },
+  {
+    "id": 239,
+    "ruleName": "规格1",
+    "ruleValue": "[{\"value\":\"11\",\"detail\":[\"11\",\"22\"],\"inputVisible\":false}]"
+  },
+  {
+    "id": 238,
+    "ruleName": "123gg",
+    "ruleValue": "[{\"value\":\"1\",\"detail\":[\"2\"]}]"
+  },
+  {
+    "id": 237,
+    "ruleName": "斤",
+    "ruleValue": "[{\"value\":\"半斤 一斤\",\"detail\":[\"称重\"]}]"
+  },
+  {
+    "id": 236,
+    "ruleName": "份",
+    "ruleValue": "[{\"value\":\"小份\",\"detail\":[\"10\",\"店里面\"],\"inputVisible\":false},{\"value\":\"中份\",\"detail\":[\"15\",\"外卖\"],\"inputVisible\":false},{\"value\":\"大份\",\"detail\":[\"20\",\"会员\"],\"inputVisible\":false}]"
+  },
+  {
+    "id": 235,
+    "ruleName": "465465",
+    "ruleValue": "[{\"value\":\"54545\",\"detail\":[\"日7567\"]}]"
+  },
+  {
+    "id": 234,
+    "ruleName": "1142",
+    "ruleValue": "[{\"value\":\"154\",\"detail\":[\"235\"]}]"
+  },
+  {
+    "id": 233,
+    "ruleName": "色也",
+    "ruleValue": "[{\"value\":\"2\",\"detail\":[\"2\",\"无色\"],\"inputVisible\":false},{\"value\":\"3\",\"detail\":[\"423\"]}]"
+  }
+]
