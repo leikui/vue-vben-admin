@@ -27,7 +27,7 @@ const routes: RouteRecordRaw[] = [
 
       {
         meta: {
-          title: '商品管理',
+          title: '商品',
         },
         name: 'Category',
         path: '/demos/product',
@@ -47,6 +47,23 @@ const routes: RouteRecordRaw[] = [
             name: 'Attr',
             path: '/demos/product/attr',
             component: () => import('#/views/demos/product/attr/index.vue'),
+          },
+          {
+            meta: {
+              title: '商品管理',
+            },
+            name: 'Product',
+            path: '/demos/product/product',
+            component: () => import('#/views/demos/product/product/index.vue'),
+          },
+          {
+            meta: {
+              title: '新增商品',
+              hideInMenu: true,
+            },
+            name: 'Add',
+            path: '/demos/product/add',
+            component: () => import('#/views/demos/product/add/index.vue'),
           },
         ]
       },

@@ -134,7 +134,7 @@ const newAttrCancle = () => {
       <!-- //规格名称 -->
       <Space>
         <span>规格名称：</span>
-        <Input v-model:value="attrData.ruleName" placeholder="Basic usage" />
+        <Input v-model:value="attrData.ruleName" placeholder="请输入规格名称" />
       </Space>
       <div v-if="attrRules">
         <div class="ml-16 mt-5">
@@ -154,9 +154,9 @@ const newAttrCancle = () => {
         <!-- //规格值 -->
         <Space>
           <span>规格：</span>
-          <Input v-model:value="newAtt.ruleName" placeholder="Basic usage" />
+          <Input v-model:value="newAtt.ruleName" placeholder="请输入规格" />
           <span>规格值：</span>
-          <Input v-model:value="newAtt.ruleValue" placeholder="Basic usage" />
+          <Input v-model:value="newAtt.ruleValue" placeholder="请输入规格值" />
           <Button type="primary" @click="newAttrConfirm" > 确定 </Button>
           <Button type="primary" @click="newAttrCancle" > 取消 </Button>
         </Space>

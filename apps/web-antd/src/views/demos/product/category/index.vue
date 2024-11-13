@@ -3,7 +3,15 @@ import { onMounted, ref } from 'vue';
 
 import { Page, useVbenModal } from '@vben/common-ui';
 
-import { message, Table, Button, Card, Image, Switch,Modal } from 'ant-design-vue';
+import {
+  message,
+  Table,
+  Button,
+  Card,
+  Image,
+  Switch,
+  Modal,
+} from 'ant-design-vue';
 
 import { useVbenForm } from '#/adapter/form';
 import Add2Update from './component/Add2UpdateCategory.vue';
@@ -127,7 +135,7 @@ const [ModalCom, modalApi] = useVbenModal({
   showCancelButton: false,
   showConfirmButton: false,
 });
-function openModal(type: number, recordData?: any,pid?: number) {
+function openModal(type: number, recordData?: any, pid?: number) {
   modalApi.setData({
     record: recordData,
     pdata: dataSource.value,
@@ -160,7 +168,6 @@ const showDeleteConfirm = () => {
     },
   });
 };
-
 </script>
 
 <template>
@@ -189,7 +196,7 @@ const showDeleteConfirm = () => {
             >添加子目录</Button
           >
           <Button type="link" @click="openModal(2, record)">编辑</Button>
-          <Button type="link" danger @click="showDeleteConfirm" >删除</Button>
+          <Button type="link" danger @click="showDeleteConfirm">删除</Button>
         </template>
         <template v-if="column.key === 'type'">
           <div>产品分类</div>

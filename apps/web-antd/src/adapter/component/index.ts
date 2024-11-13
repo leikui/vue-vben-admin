@@ -15,6 +15,7 @@ import {
   AutoComplete,
   Button,
   Checkbox,
+  Cascader,
   CheckboxGroup,
   DatePicker,
   Divider,
@@ -38,7 +39,7 @@ import {
 
 const withDefaultPlaceholder = <T extends Component>(
   component: T,
-  type: 'input' | 'select',
+  type: 'input' | 'select' | 'cascader',
 ) => {
   return (props: any, { attrs, slots }: Omit<SetupContext, 'expose'>) => {
     const placeholder = props?.placeholder || $t(`ui.placeholder.${type}`);
@@ -50,6 +51,7 @@ const withDefaultPlaceholder = <T extends Component>(
 export type ComponentType =
   | 'AutoComplete'
   | 'Checkbox'
+  | 'Cascader'
   | 'CheckboxGroup'
   | 'DatePicker'
   | 'DefaultButton'
@@ -100,6 +102,7 @@ async function initComponentAdapter() {
     RangePicker,
     Rate,
     Select: withDefaultPlaceholder(Select, 'select'),
+    Cascader: withDefaultPlaceholder(Cascader, 'cascader'),
     Space,
     Switch,
     Textarea: withDefaultPlaceholder(Textarea, 'input'),

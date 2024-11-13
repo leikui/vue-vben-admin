@@ -14,3 +14,10 @@ export async function getCategoryApi(params: any) {
 export async function getAttrApi(params: any) {
   return requestClient.get('/product/attr/list',{params});
 }
+
+/**
+ * 获取用户信息
+ */
+export async function getProductApi(params: any) {
+  return requestClient.get('/product/product/list',{params});
+}
