@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
+    "@tinymce/tinymce-vue": "^6.1.0",
     "@vben/access": "workspace:*",
     "@vben/common-ui": "workspace:*",
     "@vben/constants": "workspace:*",
@@ -45,6 +46,7 @@
     "ant-design-vue": "catalog:",
     "dayjs": "catalog:",
     "pinia": "catalog:",
+    "tinymce": "^7.5.1",
     "vue": "catalog:",
     "vue-router": "catalog:"
   }

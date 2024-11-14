@@ -9,6 +9,7 @@ import {
   Table,
   Descriptions,
   DescriptionsItem,
+  Switch,
 } from 'ant-design-vue';
 
 import { PlusOutlined, LoadingOutlined } from '@ant-design/icons-vue';
@@ -66,8 +67,8 @@ const columns = ref([
   },
   {
     title: '状态',
-    dataIndex: 'specType',
-    key: 'specType',
+    dataIndex: 'isShow',
+    key: 'isShow',
     fixed: 'right',
     width: 100,
   },
@@ -176,18 +177,27 @@ const toAdd = () => {
     },
   });
 };
+const updateProd = (id) => {
+  router.push({
+    path: '/demos/product/add',
+    query: {
+      productId: id,
+    }
+  });
+}
+const delProd = (id) => {
+
+}
 </script>
 <template>
-  <Table
-    :columns="columns"
-    :data-source="data"
-    :scroll="{ x: 1500 }"
-    rowKey="id"
-    :expand-column-width="100"
-  >
+  <Table :columns="columns" :data-source="data" :scroll="{ x: 1500 }" rowKey="id" :expand-column-width="100">
     <template #bodyCell="{ column, record }">
       <template v-if="column.key === 'action'">
-        <a>Delete</a>
+        <Button type="primary" @click="updateProd(record.id)" >编辑</Button>
+        <Button type="text" danger @click="delProd(record.id)" >移入回收站</Button>
+      </template>
+      <template v-if="column.key === 'isShow'">
+        <Switch v-model:checked="record.isShow" checked-children="上架" un-checked-children="下架" />
       </template>
       <template v-if="column.key === 'image'">
         <Image :width="30" :src="record.image" />
@@ -196,23 +206,11 @@ const toAdd = () => {
     <template #expandedRowRender="{ record }">
       <p style="margin: 0">
         <Descriptions>
-          <DescriptionsItem label="商品分类："
-            ><span
-              v-for="(item, index) in record.cateValues.split(',')"
-              :key="index"
-              class="mr10"
-              >{{ item }}</span
-            ></DescriptionsItem
-          >
-          <DescriptionsItem label="市场价："
-            ><span>{{ record.otPrice }}</span></DescriptionsItem
-          >
-          <DescriptionsItem label="成本价："
-            ><span>{{ record.cost }}</span></DescriptionsItem
-          >
-          <DescriptionsItem label="收藏："
-            ><span>{{ record.collectCount }}</span></DescriptionsItem
-          >
+          <DescriptionsItem label="商品分类："><span v-for="(item, index) in record.cateValues.split(',')" :key="index"
+              class="mr10">{{ item }}</span></DescriptionsItem>
+          <DescriptionsItem label="市场价："><span>{{ record.otPrice }}</span></DescriptionsItem>
+          <DescriptionsItem label="成本价："><span>{{ record.cost }}</span></DescriptionsItem>
+          <DescriptionsItem label="收藏："><span>{{ record.collectCount }}</span></DescriptionsItem>
           <DescriptionsItem label="虚拟销量：">
             <span>{{ record.ficti }}</span>
           </DescriptionsItem>

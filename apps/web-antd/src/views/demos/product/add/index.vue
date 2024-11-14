@@ -3,14 +3,33 @@ import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Button, Card, message, Step, Steps, Switch ,Upload} from 'ant-design-vue';
+import { Button, Card, message, Step, Steps, Switch ,Upload,Image} from 'ant-design-vue';
 import { LoadingOutlined ,PlusOutlined} from "@ant-design/icons-vue";
 import { useVbenForm } from '#/adapter/form';
-import { getCategoryApi } from "#/api";
+import { getCategoryApi ,getProductInfoApi} from "#/api";
+import TEditor from './component/TinyEditor.vue';
+import {useRoute} from 'vue-router';
 
+
+const router = useRoute();
 onMounted(() => {
+  console.log(router.query.productId);
+  const productId= router.query.productId;
+  if (productId) {
+    getProductInfo(productId)
+  }
+
   getCateGoryData()
 })
+
+const prodContent = ref()
+const getProductInfo = async (productId) => {
+  const res = await getProductInfoApi(productId)
+  firstFormApi.setValues(res)
+  secondFormApi.setValues(res)
+  thirdFormApi.setValues(res)
+  prodContent.value = res.content
+}
 
 
 const categoryData = ref()
@@ -134,7 +153,7 @@ const [FirstForm, firstFormApi] = useVbenForm({
 
       fieldName: 'sliderImages',
       label: '商品轮播图',
-      rules: 'required',
+      // rules: 'required',
     },
     {
       component: 'Cascader',
@@ -148,7 +167,6 @@ const [FirstForm, firstFormApi] = useVbenForm({
         multiple: true,
         maxTagCount: "responsive",
         showCheckedStrategy: 'SHOW_CHILD',
-        class: 'w-[200px]',
       },
       fieldName: 'cateIds',
       label: '商品分类',
@@ -161,8 +179,8 @@ const [FirstForm, firstFormApi] = useVbenForm({
         unCheckedChildren: '下架',
         class: 'w-auto',
       },
-      defaultValue: true,
-      fieldName: 'status',
+      defaultValue: false,
+      fieldName: 'isShow',
       label: '商品状态',
     },
 
@@ -187,14 +205,174 @@ const [SecondForm, secondFormApi] = useVbenForm({
   },
   schema: [
     {
-      component: 'Input',
+      component: 'RadioGroup',
       componentProps: {
-        placeholder: '请输入',
+        options: [
+          {
+            label: '单规格',
+            value: '1',
+          },
+          // {
+          //   label: '多规格',
+          //   value: '2',
+          // },
+        ],
       },
-      fieldName: 'formSecond',
-      label: '表单2字段',
-      rules: 'required',
+      fieldName: 'radioGroup',
+      label: '单选组',
+      defaultValue: '1',
+      rules: 'selectRequired',
     },
+    {
+      component: 'Input',
+      dependencies: {
+        if(values) {
+          return values.radioGroup == 1;
+        },
+        // 只有指定的字段改变时，才会触发
+        triggerFields: ['radioGroup'],
+      },
+      fieldName: 'image',
+      label: '图片',
+      // rules: 'required',
+    },
+    {
+      component: 'InputNumber',
+      componentProps: {
+        min: 0,
+        step:0.01,
+        precision: 2,
+        addonAfter:"元"
+      },
+      dependencies: {
+        if(values) {
+          return values.radioGroup == 1;
+        },
+        // 只有指定的字段改变时，才会触发
+        triggerFields: ['radioGroup'],
+      },
+      fieldName: 'price',
+      label: '售价',
+      rules:'required',
+    },
+    {
+      component: 'InputNumber',
+      componentProps: {
+        min: 0,
+        step:0.01,
+        precision: 2,
+        addonAfter:"元"
+      },
+      dependencies: {
+        if(values) {
+          return values.radioGroup == 1;
+        },
+        // 只有指定的字段改变时，才会触发
+        triggerFields: ['radioGroup'],
+      },
+      fieldName: 'cost',
+      label: '成本价',
+      rules:'required',
+    },
+    {
+      component: 'InputNumber',
+      componentProps: {
+        min: 0,
+        step:0.01,
+        precision: 2,
+        addonAfter:"元"
+      },
+      dependencies: {
+        if(values) {
+          return values.radioGroup == 1;
+        },
+        // 只有指定的字段改变时，才会触发
+        triggerFields: ['radioGroup'],
+      },
+      fieldName: 'otPrice',
+      label: '划线价',
+      rules:'required',
+    },
+    {
+      component: 'InputNumber',
+      componentProps: {
+        min: 0,
+        addonAfter:"件"
+      },
+      dependencies: {
+        if(values) {
+          return values.radioGroup == 1;
+        },
+        // 只有指定的字段改变时，才会触发
+        triggerFields: ['radioGroup'],
+      },
+      fieldName: 'stock',
+      label: '库存',
+      rules:'required',
+    },
+    {
+      component: 'Input',
+      dependencies: {
+        if(values) {
+          return values.radioGroup == 1;
+        },
+        // 只有指定的字段改变时，才会触发
+        triggerFields: ['radioGroup'],
+      },
+      fieldName: 'barCode',
+      label: '商品编码',
+      rules:'required',
+    },
+    // {
+    //   component: 'Input',
+
+    //   dependencies: {
+    //     if(values) {
+    //       return values.radioGroup == 1;
+    //     },
+    //     // 只有指定的字段改变时，才会触发
+    //     triggerFields: ['radioGroup'],
+    //   },
+    //   fieldName: 'field1',
+    //   label: '条形码',
+    //   rules:'required',
+    // },
+    {
+      component: 'InputNumber',
+      componentProps: {
+        min: 0,
+        addonAfter:"kg"
+      },
+      dependencies: {
+        if(values) {
+          return values.radioGroup == 1;
+        },
+        // 只有指定的字段改变时，才会触发
+        triggerFields: ['radioGroup'],
+      },
+      fieldName: 'weight',
+      label: '重量',
+      rules:'required',
+    },
+    {
+      component: 'InputNumber',
+      componentProps: {
+        min: 0,
+        addonAfter:"m³"
+      },
+      dependencies: {
+        if(values) {
+          return values.radioGroup == 1;
+        },
+        // 只有指定的字段改变时，才会触发
+        triggerFields: ['radioGroup'],
+      },
+      fieldName: 'volume',
+      label: '体积',
+      rules:'required',
+    },
+
+
   ],
   submitButtonOptions: {
     content: '下一步',
@@ -205,7 +383,7 @@ const [SecondForm, secondFormApi] = useVbenForm({
 const [ThirdForm, thirdFormApi] = useVbenForm({
   commonConfig: {
     componentProps: {
-      class: 'w-full',
+      class: 'w-auto',
     },
   },
   handleReset: onThirdReset,
@@ -215,20 +393,17 @@ const [ThirdForm, thirdFormApi] = useVbenForm({
     content: '上一步',
   },
   schema: [
-    {
+  {
       component: 'Input',
-      componentProps: {
-        placeholder: '请输入',
-      },
-      fieldName: 'formThird',
-      label: '表单3字段',
-      rules: 'required',
+      fieldName: 'content',
+      label: '商品详情',
+      // rules: 'required',
     },
   ],
   submitButtonOptions: {
     content: '完成',
   },
-  wrapperClass: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2',
+  wrapperClass: 'grid-cols-1 md:grid-cols-1 lg:grid-cols-1',
 });
 
 
@@ -242,22 +417,21 @@ async function handleMergeSubmit() {
     content: `merged form values: ${JSON.stringify(values)}`,
   });
 }
+const v = "<p>adw</p>\n<p>asdqwd</p>"
+
 </script>
 
 <template>
   <Page>
-    <Card title="基础示例">
-      <template #extra>
-        <Switch v-model:checked="needMerge" checked-children="开启字段合并" class="mr-4" un-checked-children="关闭字段合并" />
-        <Button type="primary" @click="handleMergeSubmit">合并提交</Button>
-      </template>
+    <Card>
       <div class="">
         <Steps :current="currentTab" class="steps">
-          <Step title="商品信息" />
+          <Step title="基础信息" />
+          <Step title="规格库存" />
           <Step title="商品详情" />
-          <Step title="其他设置" />
+          <!-- <Step title="其他设置" /> -->
         </Steps>
-        <div class="p-20">
+        <div class="p-10">
           <FirstForm v-show="currentTab === 0">
             <template #sliderImages="slotProps">
               <Upload v-bind="slotProps" v-model:file-list="fileList" name="avatar" list-type="picture-card"
@@ -271,8 +445,25 @@ async function handleMergeSubmit() {
               </Upload>
             </template>
           </FirstForm>
-          <SecondForm v-show="currentTab === 1" />
-          <ThirdForm v-show="currentTab === 2" />
+          <SecondForm v-show="currentTab === 1" >
+            <template #image="slotProps">
+              <Upload v-bind="slotProps" v-model:file-list="fileList" name="avatar" list-type="picture-card"
+                class="avatar-uploader" :show-upload-list="false" :before-upload="beforeUpload" @change="handleChange">
+                <Image v-if="imageUrl" :src="imageUrl" alt="avatar" />
+                <div v-else>
+                  <loading-outlined v-if="loading"></loading-outlined>
+                  <plus-outlined v-else></plus-outlined>
+                  <div class="ant-upload-text">上传</div>
+                </div>
+              </Upload>
+            </template>
+          </SecondForm>
+          <ThirdForm v-show="currentTab === 2" >
+            <template #content="slotProps">
+              <TEditor v-bind="slotProps" :value="prodContent">
+              </TEditor>
+            </template>
+          </ThirdForm>
         </div>
       </div>
     </Card>
