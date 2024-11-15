@@ -28,3 +28,12 @@ export async function getProductApi(params: any) {
 export async function getProductInfoApi(params: any) {
   return requestClient.get('/product/product/'+params);
 }
+
+/**
+ * 获取用户信息
+ */
+export async function getProductOrderListApi(params: any) {
+  console.log(params);
+
+  return requestClient.get('/product/order/list', params);
+}

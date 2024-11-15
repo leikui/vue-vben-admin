@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue';
 
 import { Page, useVbenModal } from '@vben/common-ui';
 
-import { message, Table, Button, Card, Image, Switch,Modal } from 'ant-design-vue';
+import { message, Table, Button, Card, Image, Switch, Modal } from 'ant-design-vue';
 
 import { useVbenForm } from '#/adapter/form';
 import Attr from './component/attr.vue'
@@ -90,7 +90,7 @@ const [ModalCom, modalApi] = useVbenModal({
   showConfirmButton: true,
   class: 'w-[60%]',
 });
-function openModal(type: number, recordData?: any,pid?: number) {
+function openModal(type: number, recordData?: any, pid?: number) {
   modalApi.setData({
     attr: recordData,
     action: type,
@@ -142,32 +142,21 @@ const parseRuleDetail = (ruleDetail: any) => {
       <QueryForm />
     </Card>
 
-    <Table
-      :columns="columns"
-      :data-source="dataSource"
-      rowKey="id"
-      bordered
-    >
+    <Table :columns="columns" :data-source="dataSource" rowKey="id" bordered>
       <template #bodyCell="{ column, record }">
 
         <template v-if="column.key === 'action'">
           <Button type="link" @click="openModal(2, record)">编辑</Button>
-          <Button type="link" danger @click="showDeleteConfirm(record.id)" >删除</Button>
+          <Button type="link" danger @click="showDeleteConfirm(record.id)">删除</Button>
         </template>
         <template v-if="column.key === 'ruleValue'">
-          <div>{{parseRuleDetail(record.ruleValue)}}</div>
+          <div>{{ parseRuleDetail(record.ruleValue) }}</div>
         </template>
         <template v-if="column.key === 'status'">
-          <Switch
-            v-model:checked="record.status"
-            checked-children="开"
-            un-checked-children="关"
-          />
+          <Switch v-model:checked="record.status" checked-children="开" un-checked-children="关" />
         </template>
       </template>
-      <template #title
-        ><Button type="primary" @click="openModal(1)">新增</Button></template
-      >
+      <template #title><Button type="primary" @click="openModal(1)">新增</Button></template>
     </Table>
 
     <ModalCom />
