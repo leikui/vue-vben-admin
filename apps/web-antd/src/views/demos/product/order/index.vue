@@ -4,21 +4,63 @@ import { onMounted, ref } from 'vue';
 import { Page, useVbenModal } from '@vben/common-ui';
 
 import { message, Table, Button, Card, Image, Switch, Modal } from 'ant-design-vue';
-
+import dayjs, { Dayjs } from 'dayjs';
 import { useVbenForm } from '#/adapter/form';
 import { getProductOrderListApi } from '#/api';
 
+const orderStatus = ref([
+  {
+    label: '全部',
+    value: '-1',
+  },
+  {
+    label: '待付款',
+    value: '0',
+  },
+  {
+    label: '待发货',
+    value: '1',
+  },
+  {
+    label: '待收货',
+    value: '2',
+  },
+  {
+    label: '已完成',
+    value: '3',
+  },
+  {
+    label: '已关闭',
+    value: '4',
+  },
+  {
+    label: '已退款',
+    value: '5',
+  },
+  {
+    label: '已删除',
+    value: '6',
+  },
+]);
+const rangePresets = ref([
+  { label: '7天之前', value: [dayjs().add(-7, 'd'), dayjs()] },
+  { label: '14天之前', value: [dayjs().add(-14, 'd'), dayjs()] },
+  { label: '30之前', value: [dayjs().add(-30, 'd'), dayjs()] },
+  { label: '90天之前', value: [dayjs().add(-90, 'd'), dayjs()] },
+]);
 
-const [QueryForm, form] = useVbenForm({
+const [QueryForm, formApi] = useVbenForm({
   // 默认展开
   collapsed: false,
   // 所有表单项共用，可单独在表单内覆盖
+
   commonConfig: {
     // 所有表单项
     componentProps: {
       class: 'w-full',
     },
   },
+  fieldMappingTime: [['rangePicker', ['startTime', 'endTime'], 'YYYY-MM-DD']],
   // 提交函数
   handleSubmit: onSubmit,
   // 垂直布局，label和input在不同行，值为vertical
@@ -26,16 +68,44 @@ const [QueryForm, form] = useVbenForm({
   layout: 'horizontal',
   schema: [
     {
+      component: 'Select',
+      componentProps: {
+        allowClear: true,
+        filterOption: false,
+        options: orderStatus.value,
+        placeholder: '请选择',
+        showSearch: false,
+        // fieldNames: { label: 'username', value: 'id' },
+      },
+      defaultValue: '-1',
+      fieldName: 'status',
+      label: '订单状态',
+    },
+    {
+      component: 'RangePicker',
+      componentProps: {
+        presets: rangePresets.value,
+        onChange: (value: Dayjs[], dateString: string[]) => {
+          console.log(value, dateString);
+          if (!value) {
+            formApi.setFieldValue('rangePicker', []);
+          }
+        },
+      },
+      fieldName: 'rangePicker',
+      label: '创建时间',
+    },
+    {
       // 组件需要在 #/adapter.ts内注册，并加上类型
       component: 'Input',
       // 对应组件的参数
       componentProps: {
-        placeholder: '请输入名称',
+        placeholder: '请输入订单号',
       },
       // 字段名
-      fieldName: 'name',
+      fieldName: 'orderNo',
       // 界面显示的label
-      label: '规格名称',
+      label: '订单号',
     },
   ],
   // 是否可展开
@@ -43,7 +113,7 @@ const [QueryForm, form] = useVbenForm({
   submitButtonOptions: {
     content: '查询',
   },
-  wrapperClass: 'grid-cols-1 md:grid-cols-3',
+  wrapperClass: 'grid-cols-1 md:grid-cols-2',
 });
 async function onSubmit(values: Record<string, any>) {
   const res = await getProductOrderListApi({ ...values, page: 1, pageSize: 10 });
@@ -54,7 +124,7 @@ async function onSubmit(values: Record<string, any>) {
 }
 
 onMounted(() => {
-  form.submitForm();
+  formApi.submitForm();
 });
 
 // table
