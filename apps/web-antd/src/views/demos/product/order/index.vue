@@ -116,8 +116,13 @@ const [QueryForm, formApi] = useVbenForm({
   wrapperClass: 'grid-cols-1 md:grid-cols-2',
 });
 async function onSubmit(values: Record<string, any>) {
-  const res = await getProductOrderListApi({ ...values, page: 1, pageSize: 10 });
+  const res = await getProductOrderListApi({
+    ...values,
+    page: pagination.value.current,
+    pageSize: pagination.value.pageSize
+  });
   dataSource.value = res.items;
+  pagination.value.total = res.total; // 假设API返回总数
   message.success({
     content: `form values: ${JSON.stringify(values)}`,
   });
@@ -133,6 +138,7 @@ const columns = ref([
     title: '订单号',
     dataIndex: 'orderId',
     key: 'orderId',
+    width: 100,
   },
   {
     title: '订单类型',
@@ -148,6 +154,7 @@ const columns = ref([
     title: '商品信息',
     dataIndex: 'productList',
     key: 'productList',
+    width: 400,
   },
   {
     title: '实际支付',
@@ -178,6 +185,12 @@ const columns = ref([
 ]);
 const dataSource = ref();
 
+// 添加分页相关的响应式变量
+const pagination = ref({
+  total: 0,
+  current: 1,
+  pageSize: 10,
+});
 
 const showDeleteConfirm = (attrId) => {
   Modal.confirm({
@@ -195,7 +208,12 @@ const showDeleteConfirm = (attrId) => {
   });
 };
 
-
+// 添加分页改变处理函数
+const handleTableChange = (pag: any) => {
+  pagination.value.current = pag.current;
+  pagination.value.pageSize = pag.pageSize;
+  formApi.submitForm();
+};
 
 </script>
 
@@ -205,16 +223,40 @@ const showDeleteConfirm = (attrId) => {
       <QueryForm />
     </Card>
 
-    <Table :columns="columns" :data-source="dataSource" rowKey="id" bordered>
+    <Table :columns="columns" :data-source="dataSource" :pagination="pagination" @change="handleTableChange" rowKey="orderId" bordered :scroll="{ x: 1000 }"
+      :expand-column-width="30">
       <template #bodyCell="{ column, record }">
 
         <template v-if="column.key === 'action'">
           <Button type="link" danger @click="showDeleteConfirm(record.id)">删除</Button>
         </template>
+        <template v-if="column.key === 'productList'">
+          <div v-for="item in record.productList" :key="item.id">
+            <div style="display: flex; align-items: center;">
+              <Image :height="50" :width="50" :src="item.info.image" alt="avatar" style="margin-right: 8px;" />
+              <span :title="item.info.productName"
+                style="display: inline-block; max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{
+                  item.info.productName }}...</span>
+            </div>
+          </div>
+        </template>
 
         <template v-if="column.key === 'status'">
           <Switch v-model:checked="record.status" checked-children="开" un-checked-children="关" />
         </template>
+      </template>
+      <template #expandedRowRender="{ record }">
+        <div v-for="item in record.productList" :key="item.id" class="mb-4">
+          <div style="display: flex; align-items: center; margin-bottom: 8px;">
+            <Image :height="80" :width="80" :src="item.info.image" alt="商品图片" style="margin-right: 16px;" />
+            <div class="ml-4">
+              <div style="font-size: 14px; margin-bottom: 8px;">{{ item.info.productName }}</div>
+              <div style="color: #999;">规格: {{ item.info.sku }}</div>
+              <div style="color: #f5222d; font-size: 16px;">¥{{ item.info.price }}</div>
+              <div style="color: #999;">数量: {{ item.info.payNum }}</div>
+            </div>
+          </div>
+        </div>
       </template>
     </Table>
 
