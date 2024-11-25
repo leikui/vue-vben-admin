@@ -6,40 +6,42 @@ import { Page, useVbenModal } from '@vben/common-ui';
 import { message, Table, Button, Card, Image, Switch, Modal } from 'ant-design-vue';
 import dayjs, { Dayjs } from 'dayjs';
 import { useVbenForm } from '#/adapter/form';
-import { getProductOrderListApi } from '#/api';
+import { getProductOrderListApi, getProductOrderDetailApi } from '#/api';
 
+
+//订单状态（all 总数； 未支付 unPaid； 未发货 notShipped；待收货 spike；待评价 bargain；已完成 complete；待核销 toBeWrittenOff；退款中:refunding；已退款:refunded；已删除:deleted
 const orderStatus = ref([
   {
     label: '全部',
-    value: '-1',
+    value: 'all',
   },
   {
     label: '待付款',
-    value: '0',
+    value: 'unPaid',
   },
   {
     label: '待发货',
-    value: '1',
+    value: 'notShipped',
   },
   {
     label: '待收货',
-    value: '2',
+    value: 'spike',
   },
   {
     label: '已完成',
-    value: '3',
+    value: 'complete',
   },
   {
-    label: '已关闭',
-    value: '4',
+    label: '退款中',
+    value: 'refunding',
   },
   {
     label: '已退款',
-    value: '5',
+    value: 'refunded',
   },
   {
     label: '已删除',
-    value: '6',
+    value: 'deleted',
   },
 ]);
 const rangePresets = ref([
@@ -75,9 +77,9 @@ const [QueryForm, formApi] = useVbenForm({
         options: orderStatus.value,
         placeholder: '请选择',
         showSearch: false,
-        // fieldNames: { label: 'username', value: 'id' },
+        fieldNames: { label: 'label', value: 'value' },
       },
-      defaultValue: '-1',
+      defaultValue: 'all',
       fieldName: 'status',
       label: '订单状态',
     },
@@ -118,10 +120,11 @@ const [QueryForm, formApi] = useVbenForm({
 async function onSubmit(values: Record<string, any>) {
   const res = await getProductOrderListApi({
     ...values,
+    type: '0',
     page: pagination.value.current,
-    pageSize: pagination.value.pageSize
+    limit: pagination.value.pageSize
   });
-  dataSource.value = res.items;
+  dataSource.value = res.list;
   pagination.value.total = res.total; // 假设API返回总数
   message.success({
     content: `form values: ${JSON.stringify(values)}`,
@@ -215,6 +218,20 @@ const handleTableChange = (pag: any) => {
   formApi.submitForm();
 };
 
+
+//订单详情
+const [ModalDetail, modalApi] = useVbenModal();
+const orderDetail = ref()
+const showDetail = async (id: string) => {
+  console.log(id);
+  const res = await getProductOrderDetailApi({
+    orderNo: id,
+  });
+  console.log(res);
+  orderDetail.value = res
+  modalApi.open()
+};
+
 </script>
 
 <template>
@@ -228,7 +245,9 @@ const handleTableChange = (pag: any) => {
       <template #bodyCell="{ column, record }">
 
         <template v-if="column.key === 'action'">
-          <Button type="link" danger @click="showDeleteConfirm(record.id)">删除</Button>
+          <Button type="link" danger @click="showDeleteConfirm(record.orderId)">删除</Button>
+          <Button type="link" @click="showDetail(record.orderId)">详情</Button>
+
         </template>
         <template v-if="column.key === 'productList'">
           <div v-for="item in record.productList" :key="item.id">
@@ -241,9 +260,11 @@ const handleTableChange = (pag: any) => {
           </div>
         </template>
 
-        <template v-if="column.key === 'status'">
-          <Switch v-model:checked="record.status" checked-children="开" un-checked-children="关" />
+        <template v-if="column.key === 'refundStatus'">
+          <!-- //订单状态 -->
+          {{ record.statusStr?.value }}
         </template>
+
       </template>
       <template #expandedRowRender="{ record }">
         <div v-for="item in record.productList" :key="item.id" class="mb-4">
@@ -261,5 +282,45 @@ const handleTableChange = (pag: any) => {
     </Table>
 
     <ModalCom />
+    <div>
+
+    <ModalDetail class="w-[600px]" title="订单详情">
+      <div class="p-4">
+        <div class="mb-4">
+          <div class="font-bold mb-2">用户信息</div>
+          <div class="ml-4">
+            <div>用户昵称：{{ orderDetail?.nikeName }}</div>
+            <div>绑定电话：{{ orderDetail?.phone }}</div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <div class="font-bold mb-2">收货信息</div>
+          <div class="ml-4">
+            <div>收货人：{{ orderDetail?.realName }}</div>
+            <div>收货电话：{{ orderDetail?.userPhone }}</div>
+            <div>收货地址：{{ orderDetail?.userAddress }}</div>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <div class="font-bold mb-2">订单信息</div>
+          <div class="ml-4">
+            <div>订单编号：{{ orderDetail?.orderId }}</div>
+            <div class="text-red-500">订单状态：{{ orderDetail?.statusStr.value }}</div>
+            <div>商品总数：{{ orderDetail?.totalNum }}</div>
+            <div>商品总价：{{ orderDetail?.totalPrice }}</div>
+            <div>支付邮费：{{ orderDetail?.payPostage }}</div>
+            <div>实际支付：{{ orderDetail?.payPrice }}</div>
+            <div>退款金额：{{ orderDetail?.refundPrice }}</div>
+            <div>创建时间：{{ orderDetail?.createTime }}</div>
+            <div>支付方式：{{ orderDetail?.payTypeStr }}</div>
+            <div>推广人：{{ orderDetail?.spreadUser || '-' }}</div>
+            <div>商家备注：{{ orderDetail?.remark || '' }}</div>
+          </div>
+        </div>
+      </div>
+    </ModalDetail>
+    </div>
   </Page>
 </template>

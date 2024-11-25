@@ -28,7 +28,7 @@ class FileUploader {
       },
     };
 
-    return this.client.post(url, formData, finalConfig);
+    return this.client.postUpload(url, formData, finalConfig);
   }
 }
 

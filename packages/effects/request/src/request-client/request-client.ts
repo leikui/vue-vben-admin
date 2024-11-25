@@ -99,6 +99,18 @@ class RequestClient {
   }
   }
 
+    /**
+   * POST请求方法
+   */
+    public postUpload<T = any>(
+      url: string,
+      data?: any,
+      config?: AxiosRequestConfig,
+    ): Promise<T> {
+      return this.request<T>(url, { ...config, data, method: 'POST' });
+    }
+
+
   /**
    * PUT请求方法
    */

@@ -32,7 +32,7 @@ const commonData = ref(
   }
 )
 const getCommonData = async () => {
-  const res = await getCategoryApi({ status:-1, page: 1, pageSize: 9999});
+  const res = await getCategoryApi({ status:-1, page: 1, limit: 9999});
   commonData.value.categories = res;
 
 }

@@ -163,7 +163,7 @@ async function onSubmit(values: Record<string, any>) {
     page: 1,
     pageSize: 10,
   });
-  data.value = res.items;
+  data.value = res.list;
   message.success({
     content: `form values: ${JSON.stringify(values)}`,
   });

@@ -105,7 +105,7 @@ export async function addDoctorUserslAPI(param? :any) {
  * 上传文件
  */
 export async function upLoadFileAPI(param: File) {
-  return requestClient.upload('/file/upload',param);
+  return requestClient.upload('/file/upload',{file:param});
 }
 
 

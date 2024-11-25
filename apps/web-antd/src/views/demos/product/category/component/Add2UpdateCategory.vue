@@ -6,7 +6,7 @@ import { PlusOutlined, LoadingOutlined } from '@ant-design/icons-vue';
 
 import { useVbenModal } from '@vben/common-ui';
 import { useVbenForm } from '#/adapter/form';
-
+import { upLoadFileAPI,saveCategoryApi } from '#/api';
 const data = ref();
 
 const [Modal, modalApi] = useVbenModal({
@@ -130,7 +130,6 @@ const [BaseForm, formApi] = useVbenForm({
       },
       fieldName: 'pid',
       label: '父级分类',
-      rules: 'required',
     },
     {
       component: 'Input',
@@ -167,6 +166,10 @@ function onSubmit(values: Record<string, any>) {
   message.success({
     content: `form values: ${JSON.stringify(values)}`,
   });
+  if (values.pid == null || values.pid == '' || values.pid == undefined) {
+    values.pid = 0;
+  }
+  saveCategoryApi({...values,type:1});
 }
 
 
@@ -175,67 +178,108 @@ const fileList = ref([]);
 const loading = ref<boolean>(false);
 const imageUrl = ref<string>('');
 
-const handleChange = (info) => {
-  if (info.file.status === 'uploading') {
-    loading.value = true;
-    return;
-  }
-  if (info.file.status === 'done') {
-    // Get this url from response in real world.
-
-    getBase64(info.file.originFileObj, (base64Url: string) => {
-      imageUrl.value = base64Url;
-      loading.value = false;
-    });
-  }
-  if (info.file.status === 'error') {
-    loading.value = false;
-    message.error('upload error');
-  }
-};
-
-const beforeUpload = (file) => {
-  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/jpg';
-  if (!isJpgOrPng) {
-    message.error('You can only upload JPG file!');
+// 上传前校验
+const beforeUpload = (file: File) => {
+  const isImage = /^image\/(jpeg|png|jpg|gif)$/i.test(file.type);
+  if (!isImage) {
+    message.error('只能上传图片文件!');
+    return Upload.LIST_IGNORE;
   }
   const isLt2M = file.size / 1024 / 1024 < 2;
   if (!isLt2M) {
-    message.error('Image must smaller than 2MB!');
+    message.error('图片必须小于2MB!');
+    return Upload.LIST_IGNORE;
   }
-  return false;
+  return true;
 };
-function getBase64(img: Blob, callback: (base64Url: string) => void) {
-  const reader = new FileReader();
-  reader.addEventListener('load', () => callback(reader.result as string));
-  reader.readAsDataURL(img);
-}
 
+// 处理上传变化
+const handleUploadChange = (info: any) => {
+  const { status, response } = info.file;
 
+  if (status === 'uploading') {
+    loading.value = true;
+    return;
+  }
+
+  if (status === 'done') {
+    console.log(response);
+    loading.value = false;
+    if (response.url) {
+      imageUrl.value = response.url;
+      formApi.setFieldValue('extra', response.url);
+      message.success('上传成功');
+    } else {
+      message.error(response.msg || '上传失败');
+    }
+  } else if (status === 'error') {
+    loading.value = false;
+    message.error('上传失败');
+  }
+};
+
+// 自定义上传方法
+const customRequest = async ({ file, onSuccess, onError }: any) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    // 替换成你的实际上传API
+    const res = await upLoadFileAPI(
+      file,
+    );
+      onSuccess(res);
+  } catch (error) {
+    onError(error);
+  }
+};
 
 </script>
 <template>
   <Modal >
     <BaseForm>
-      <template #extra="slotProps">
+      <template #extra>
         <Upload
-          v-bind="slotProps"
-          v-model:file-list="fileList"
-          name="avatar"
+          name="file"
           list-type="picture-card"
           class="avatar-uploader"
           :show-upload-list="false"
           :before-upload="beforeUpload"
-          @change="handleChange"
+          :customRequest="customRequest"
+          @change="handleUploadChange"
         >
-          <Image v-if="imageUrl" :src="imageUrl" alt="avatar" />
-          <div v-else>
-            <loading-outlined v-if="loading"></loading-outlined>
-            <plus-outlined v-else></plus-outlined>
-            <div class="ant-upload-text">上传</div>
+          <div v-if="imageUrl" class="relative w-[100px] h-[100px]">
+            <img :src="imageUrl" alt="avatar" class="w-full h-full object-cover" />
+          </div>
+          <div v-else class="upload-placeholder">
+            <LoadingOutlined v-if="loading" />
+            <PlusOutlined v-else />
+            <div class="ant-upload-text">上传图片</div>
           </div>
         </Upload>
       </template>
     </BaseForm>
   </Modal>
 </template>
+
+<style scoped>
+.avatar-uploader {
+  :deep(.ant-upload) {
+    width: 100px;
+    height: 100px;
+  }
+
+  .upload-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+
+  .ant-upload-text {
+    margin-top: 8px;
+    font-size: 12px;
+  }
+}
+</style>
