@@ -62,15 +62,10 @@ export const useAuthStore = defineStore('auth', () => {
         if (accessStore.loginExpired) {
           accessStore.setLoginExpired(false);
         } else {
-          let url = ''
-          if (!['doctor'].includes(userInfo?.roleCode) ) {
-            url = '/demos/admin'
-          }else{
+
             onSuccess
             ? await onSuccess?.()
             : await router.push(userInfo.homePath || DEFAULT_HOME_PATH);
-          }
-          router.push({path:userStore.userInfo.homePath});
         }
 
         if (userInfo?.name) {
