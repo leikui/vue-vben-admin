@@ -88,9 +88,15 @@ class RequestClient {
   public post<T = any>(
     url: string,
     data?: any,
+    params?:any,
     config?: AxiosRequestConfig,
   ): Promise<T> {
+    if (data) {
+      return this.request<T>(url, { ...config, params, data, method: 'POST' });
+    }else{
+
     return this.request<T>(url, { ...config, data, method: 'POST' });
+  }
   }
 
   /**

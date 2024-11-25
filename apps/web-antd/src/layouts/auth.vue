@@ -12,10 +12,13 @@ const logo = computed(() => preferences.logo.source);
 
 <template>
   <AuthPageLayout
-    :app-name="appName"
+    :app-name="`后台管理`"
     :logo="logo"
     :page-description="$t('authentication.pageDesc')"
     :page-title="$t('authentication.pageTitle')"
+    :copyright="false"
+    :toolbar="false"
+
   >
     <!-- 自定义工具栏 -->
     <!-- <template #toolbar></template> -->

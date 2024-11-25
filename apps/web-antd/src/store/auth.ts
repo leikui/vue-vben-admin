@@ -1,4 +1,5 @@
-import type { Recordable, UserInfo } from '@vben/types';
+
+import type { UserInfo } from '@vben/types';
 
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -9,7 +10,7 @@ import { resetAllStores, useAccessStore, useUserStore } from '@vben/stores';
 import { notification } from 'ant-design-vue';
 import { defineStore } from 'pinia';
 
-import { getAccessCodesApi, getUserInfoApi, loginApi, logoutApi } from '#/api';
+import { getAccessCodesApi, getUserInfoApi,getUserDetailAPI, loginApi,getDictAllAPI,getDockerUnits } from '#/api';
 import { $t } from '#/locales';
 
 export const useAuthStore = defineStore('auth', () => {
@@ -25,41 +26,56 @@ export const useAuthStore = defineStore('auth', () => {
    * @param params 登录表单数据
    */
   async function authLogin(
-    params: Recordable<any>,
+    params: any,
     onSuccess?: () => Promise<void> | void,
   ) {
     // 异步处理用户登录操作并获取 accessToken
-    let userInfo: null | UserInfo = null;
+    let userInfo: null | any = null;
     try {
       loginLoading.value = true;
-      const { accessToken } = await loginApi(params);
+      const { access_token, refresh_token,user_info }  = await loginApi(params);
+      // const { access_token, refresh_token } = res.data
 
       // 如果成功获取到 accessToken
-      if (accessToken) {
-        accessStore.setAccessToken(accessToken);
+      if (access_token) {
+        // 将 accessToken 存储到 accessStore 中
+        accessStore.setAccessToken(access_token);
+        accessStore.setRefreshToken(refresh_token);
 
         // 获取用户信息并存储到 accessStore 中
-        const [fetchUserInfoResult, accessCodes] = await Promise.all([
-          fetchUserInfo(),
-          getAccessCodesApi(),
+        const [fetchUserInfoResult] = await Promise.all([
+          fetchUserInfo(user_info),
         ]);
-
         userInfo = fetchUserInfoResult;
-
         userStore.setUserInfo(userInfo);
-        accessStore.setAccessCodes(accessCodes);
+        // userInfo?.roles?.push(userInfo.roleId)
+        // // const roles = []
+        // // roles.push(userInfo?.roleId)
+        // // userInfo?.roles=[userInfo?.roleId]
+        // userStore.setUserInfo(userInfo)
+
+        // userInfo = user_info;
+
+        // userStore.setUserInfo("1122211221");
+        accessStore.setAccessCodes(userInfo?.roles);
 
         if (accessStore.loginExpired) {
           accessStore.setLoginExpired(false);
         } else {
-          onSuccess
+          let url = ''
+          if (!['doctor'].includes(userInfo?.roleCode) ) {
+            url = '/demos/admin'
+          }else{
+            onSuccess
             ? await onSuccess?.()
             : await router.push(userInfo.homePath || DEFAULT_HOME_PATH);
+          }
+          router.push({path:userStore.userInfo.homePath});
         }
 
-        if (userInfo?.realName) {
+        if (userInfo?.name) {
           notification.success({
-            description: `${$t('authentication.loginSuccessDesc')}:${userInfo?.realName}`,
+            description: `${$t('authentication.loginSuccessDesc')}:${userInfo?.name}`,
             duration: 3,
             message: $t('authentication.loginSuccess'),
           });
@@ -74,36 +90,47 @@ export const useAuthStore = defineStore('auth', () => {
     };
   }
 
-  async function logout(redirect: boolean = true) {
-    try {
-      await logoutApi();
-    } catch {
-      // 不做任何处理
-    }
+  async function logout() {
     resetAllStores();
     accessStore.setLoginExpired(false);
 
-    // 回登录页带上当前路由地址
+    // 回登陆页带上当前路由地址
     await router.replace({
       path: LOGIN_PATH,
-      query: redirect
-        ? {
-            redirect: encodeURIComponent(router.currentRoute.value.fullPath),
-          }
-        : {},
+      query: {
+        // redirect: encodeURIComponent(router.currentRoute.value.fullPath),
+      },
     });
   }
 
-  async function fetchUserInfo() {
-    let userInfo: null | UserInfo = null;
-    userInfo = await getUserInfoApi();
-    userStore.setUserInfo(userInfo);
-    return userInfo;
+  async function fetchUserInfo(userInfo :any) {
+    // let userInfo: null | any = null;
+    let userInfos = await getUserDetailAPI({userId:userInfo.id});
+
+    const res = await getDictAllAPI()
+
+    let url = ''
+    if (!['doctor'].includes(userInfo?.roleCode) ) {
+      url = '/demos/admin'
+    }else{
+      url = '/'
+    }
+
+    userInfos = {
+     ...userInfos,
+      roles: [],
+      homePath: url,
+    }
+    userInfos.roles.push(userInfos.roleId,userInfos.roleCode,userInfos.isManager)
+    userStore.setUserInfo(userInfos);
+    userStore.setDict(res);
+    return userInfos;
   }
 
   function $reset() {
     loginLoading.value = false;
   }
+
 
   return {
     $reset,

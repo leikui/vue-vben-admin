@@ -70,7 +70,19 @@ async function handleSubmit() {
       REMEMBER_ME_KEY,
       rememberMe.value ? values?.username : '',
     );
-    emit('submit', values);
+
+    console.log( );
+
+    emit('submit', {
+      ...values,
+    clientId: 'social',
+    code: '',
+    grant_type: 'password',
+    loginType: '',
+    resource: 'web',
+    scope: 'server',
+    userType: '',
+  });
   }
 }
 

@@ -6,8 +6,23 @@ import { defineOverridesPreferences } from '@vben/preferences';
  * !!! 更改配置后请清空缓存，否则可能不生效
  */
 export const overridesPreferences = defineOverridesPreferences({
-  // overrides
   app: {
     name: import.meta.env.VITE_APP_TITLE,
+
   },
+  shortcutKeys: {
+    enable: false,
+    globalLockScreen: true,
+    globalLogout: true,
+    globalPreferences: true,
+    globalSearch: true,
+  },
+  theme: {
+    mode: "light"
+  },
+  widget: {
+    globalSearch: false,
+    languageToggle: false,
+    lockScreen: false
+  }
 });

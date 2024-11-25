@@ -123,7 +123,7 @@ const [QueryForm, formApi] = useVbenForm({
     {
       component: 'Cascader',
       componentProps: {
-        allowClear: false,
+        allowClear: true,
         filterOption: true,
         options: props.commonData.categories,
         fieldNames: { label: 'name', value: 'id', children: 'child' },

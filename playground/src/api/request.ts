@@ -16,7 +16,6 @@ import { message } from 'ant-design-vue';
 
 import { useAuthStore } from '#/store';
 
-import { refreshTokenApi } from './core';
 
 const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
 
@@ -48,14 +47,13 @@ function createRequestClient(baseURL: string) {
    */
   async function doRefreshToken() {
     const accessStore = useAccessStore();
-    const resp = await refreshTokenApi();
     const newToken = resp.data;
     accessStore.setAccessToken(newToken);
     return newToken;
   }
 
   function formatToken(token: null | string) {
-    return token ? `Bearer ${token}` : null;
+    return token ? `Bearer ${token}` : 'Basic amlsaVBvd2VyOmppbGlQb3dlcg==';
   }
 
   // 请求头处理
