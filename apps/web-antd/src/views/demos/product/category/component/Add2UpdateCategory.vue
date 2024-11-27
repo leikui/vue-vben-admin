@@ -170,6 +170,10 @@ function onSubmit(values: Record<string, any>) {
     values.pid = 0;
   }
   saveCategoryApi({...values,type:1});
+  //关闭弹窗
+  modalApi.close();
+  //重置form
+  formApi.resetForm();
 }
 
 

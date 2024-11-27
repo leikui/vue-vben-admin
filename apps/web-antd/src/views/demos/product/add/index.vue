@@ -6,7 +6,7 @@ import { Page } from '@vben/common-ui';
 import { Button, Card, message, Step, Steps, Switch ,Upload,Image} from 'ant-design-vue';
 import { LoadingOutlined ,PlusOutlined} from "@ant-design/icons-vue";
 import { useVbenForm } from '#/adapter/form';
-import { getCategoryApi ,getProductInfoApi} from "#/api";
+import { getCategoryApi ,getProductInfoApi, upLoadFileAPI} from "#/api";
 import TEditor from './component/TinyEditor.vue';
 import {useRoute} from 'vue-router';
 
@@ -29,12 +29,19 @@ const getProductInfo = async (productId) => {
   secondFormApi.setValues(res)
   thirdFormApi.setValues(res)
   prodContent.value = res.content
+
+  if (res.sliderImages) {
+    firstImageUrl.value = res.sliderImages;
+  }
+  if (res.content) {
+    thirdImageUrl.value = res.content;
+  }
 }
 
 
 const categoryData = ref()
 const getCateGoryData = async () => {
-  const res = await getCategoryApi({})
+  const res = await getCategoryApi({type:1,page:1,limit:999,status:-1})
   categoryData.value = res
   firstFormApi.updateSchema([
     {
@@ -46,46 +53,67 @@ const getCateGoryData = async () => {
   ])
 }
 
+
 //上传组件
-const fileList = ref([]);
-const loading = ref<boolean>(false);
-const imageUrl = ref<string>('');
+const firstFileList = ref([]);
+const thirdFileList = ref([]);
+const firstImageUrl = ref('');
+const thirdImageUrl = ref('');
+const loading = ref(false);
 
-const handleChange = (info) => {
-  if (info.file.status === 'uploading') {
-    loading.value = true;
-    return;
-  }
-  if (info.file.status === 'done') {
-    // Get this url from response in real world.
+// 上传前校验
 
-    getBase64(info.file.originFileObj, (base64Url: string) => {
-      imageUrl.value = base64Url;
-      loading.value = false;
-    });
-  }
-  if (info.file.status === 'error') {
-    loading.value = false;
-    message.error('upload error');
-  }
-};
-
-const beforeUpload = (file) => {
-  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/jpg';
-  if (!isJpgOrPng) {
-    message.error('You can only upload JPG file!');
+const beforeUpload = (file: File) => {
+  const isImage = /^image\/(jpeg|png|jpg|gif)$/i.test(file.type);
+  if (!isImage) {
+    message.error('只能上传图片文件!');
+    return Upload.LIST_IGNORE;
   }
   const isLt2M = file.size / 1024 / 1024 < 2;
   if (!isLt2M) {
-    message.error('Image must smaller than 2MB!');
+    message.error('图片必须小于2MB!');
+    return Upload.LIST_IGNORE;
   }
-  return false;
+  return true;
 };
-function getBase64(img: Blob, callback: (base64Url: string) => void) {
-  const reader = new FileReader();
-  reader.addEventListener('load', () => callback(reader.result as string));
-  reader.readAsDataURL(img);
-}
+
+// 处理上传变化
+const handleUploadChange = (info: any,) => {
+  const { status, response } = info.file;
+
+  if (status === 'uploading') {
+    loading.value = true;
+    return;
+  }
+
+  if (status === 'done') {
+    console.log(response);
+    loading.value = false;
+    if (response.url) {
+      firstFormApi.setFieldValue('image', response.url);
+      message.success('上传成功');
+    } else {
+      message.error(response.msg || '上传失败');
+    }
+  } else if (status === 'error') {
+    loading.value = false;
+    message.error('上传失败');
+  }
+};
+
+// 自定义上传方法
+const customRequest = async ({ file, onSuccess, onError }: any) => {
+  try {
+    // 替换成你的实际上传API
+    const res = await upLoadFileAPI(
+      file,
+    );
+      onSuccess(res);
+  } catch (error) {
+    onError(error);
+  }
+};
+
 
 
 const currentTab = ref(0);
@@ -417,7 +445,6 @@ async function handleMergeSubmit() {
     content: `merged form values: ${JSON.stringify(values)}`,
   });
 }
-const v = "<p>adw</p>\n<p>asdqwd</p>"
 
 </script>
 
@@ -434,13 +461,24 @@ const v = "<p>adw</p>\n<p>asdqwd</p>"
         <div class="p-10">
           <FirstForm v-show="currentTab === 0">
             <template #sliderImages="slotProps">
-              <Upload v-bind="slotProps" v-model:file-list="fileList" name="avatar" list-type="picture-card"
-                class="avatar-uploader" :show-upload-list="false" :before-upload="beforeUpload" @change="handleChange">
-                <Image v-if="imageUrl" :src="imageUrl" alt="avatar" />
-                <div v-else>
-                  <loading-outlined v-if="loading"></loading-outlined>
-                  <plus-outlined v-else></plus-outlined>
-                  <div class="ant-upload-text">上传</div>
+
+              <Upload
+                v-bind="slotProps"
+                name="file"
+                list-type="picture-card"
+                class="avatar-uploader"
+                :show-upload-list="false"
+                :before-upload="beforeUpload"
+                :customRequest="customRequest"
+                @change="(info) => handleUploadChange(info, 'first')"
+              >
+                <div v-if="firstImageUrl" class="relative w-[100px] h-[100px]">
+                  <img :src="firstImageUrl" alt="商品图片" class="w-full h-full object-cover" />
+                </div>
+                <div v-else class="upload-placeholder">
+                  <LoadingOutlined v-if="loading" />
+                  <PlusOutlined v-else />
+                  <div class="ant-upload-text">上传商品图片</div>
                 </div>
               </Upload>
             </template>
@@ -448,7 +486,7 @@ const v = "<p>adw</p>\n<p>asdqwd</p>"
           <SecondForm v-show="currentTab === 1" >
             <template #image="slotProps">
               <Upload v-bind="slotProps" v-model:file-list="fileList" name="avatar" list-type="picture-card"
-                class="avatar-uploader" :show-upload-list="false" :before-upload="beforeUpload" @change="handleChange">
+                class="avatar-uploader" :show-upload-list="false" :before-upload="beforeUpload" @change="handleUploadChange">
                 <Image v-if="imageUrl" :src="imageUrl" alt="avatar" />
                 <div v-else>
                   <loading-outlined v-if="loading"></loading-outlined>
@@ -460,8 +498,28 @@ const v = "<p>adw</p>\n<p>asdqwd</p>"
           </SecondForm>
           <ThirdForm v-show="currentTab === 2" >
             <template #content="slotProps">
-              <TEditor v-bind="slotProps" :value="prodContent">
-              </TEditor>
+              <div class="mb-4">
+                <Upload
+                  v-bind="slotProps"
+                  name="file"
+                  list-type="picture-card"
+                  class="avatar-uploader"
+                  :show-upload-list="false"
+                  :before-upload="beforeUpload"
+                  :customRequest="customRequest"
+                  @change="(info) => handleUploadChange(info, 'third')"
+                >
+                  <div v-if="thirdImageUrl" class="relative w-[100px] h-[100px]">
+                    <img :src="thirdImageUrl" alt="详情图片" class="w-full h-full object-cover" />
+                  </div>
+                  <div v-else class="upload-placeholder">
+                    <LoadingOutlined v-if="loading" />
+                    <PlusOutlined v-else />
+                    <div class="ant-upload-text">上传详情图片</div>
+                  </div>
+                </Upload>
+              </div>
+              <TEditor v-bind="slotProps" :value="prodContent" />
             </template>
           </ThirdForm>
         </div>
@@ -469,3 +527,20 @@ const v = "<p>adw</p>\n<p>asdqwd</p>"
     </Card>
   </Page>
 </template>
+
+<style scoped>
+.avatar-uploader {
+  :deep(.ant-upload) {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+</style>

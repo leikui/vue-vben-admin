@@ -7,7 +7,7 @@ import { message, Table, Button, Card, Image, Switch, Modal } from 'ant-design-v
 
 import { useVbenForm } from '#/adapter/form';
 import Attr from './component/attr.vue'
-import { getAttrApi } from '#/api';
+import { getProductRuleListApi } from '#/api';
 
 
 const [QueryForm, form] = useVbenForm({
@@ -47,8 +47,8 @@ const [QueryForm, form] = useVbenForm({
   wrapperClass: 'grid-cols-1 md:grid-cols-3',
 });
 async function onSubmit(values: Record<string, any>) {
-  const res = await getAttrApi({ ...values, page: 1, pageSize: 101 });
-  dataSource.value = res.items;
+  const res = await getProductRuleListApi({ ...values, page: 1, pageSize: 999 });
+  dataSource.value = res.list;
   message.success({
     content: `form values: ${JSON.stringify(values)}`,
   });
@@ -127,13 +127,16 @@ const showDeleteConfirm = (attrId) => {
 //格式化数据方法
 const parseRuleDetail = (ruleDetail: any) => {
   const rul = JSON.parse(ruleDetail);
-  let result = '';
+  let result :string[] = [];
   rul.forEach((item: any) => {
-    result += `[${item.value}:(${item.detail})],`;
+    result.push(`${item.value}:[${item.detail}]`)
   });
-  return result;
+  return result.join(',');
 }
 
+function saveRuleSuccess(){
+  form.submitForm();
+}
 </script>
 
 <template>
@@ -142,7 +145,7 @@ const parseRuleDetail = (ruleDetail: any) => {
       <QueryForm />
     </Card>
 
-    <Table :columns="columns" :data-source="dataSource" rowKey="id" bordered>
+    <Table :columns="columns" :data-source="dataSource" :pagination="false" rowKey="id" bordered>
       <template #bodyCell="{ column, record }">
 
         <template v-if="column.key === 'action'">
@@ -159,6 +162,6 @@ const parseRuleDetail = (ruleDetail: any) => {
       <template #title><Button type="primary" @click="openModal(1)">新增</Button></template>
     </Table>
 
-    <ModalCom />
+    <ModalCom @saveRuleSuccess="saveRuleSuccess" />
   </Page>
 </template>

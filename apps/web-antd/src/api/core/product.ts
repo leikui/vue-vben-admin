@@ -50,5 +50,39 @@ export async function getProductOrderDetailApi(params: any) {
  * 保存分类
  */
 export async function saveCategoryApi(params: any) {
-  return requestClient.post('/center/good/category/save', params);
+  return requestClient.post('/center/good/category/save', params );
+}
+/**
+ * 删除分类
+ */
+export async function deleteCategoryApi(params: any) {
+  return requestClient.get('/center/good/category/delete', params );
+}
+
+/**
+ * 更新分类
+ */
+export async function updateCategoryApi(params: any) {
+  return requestClient.post('/center/good/category/update', params );
+}
+
+/**
+ * 获取商品规格列表
+ */
+export async function getProductRuleListApi(params: any) {
+  return requestClient.get('/center/good/product/rule/list', params );
+}
+
+/**
+ * 保存商品规格
+ */
+export async function saveProductRuleApi(params: any) {
+  return requestClient.post('/center/good/product/rule/save', params );
+}
+
+/**
+ * 更新商品规格
+ */
+export async function updateProductRuleApi(params: any) {
+  return requestClient.post('/center/good/product/rule/update', params );
 }

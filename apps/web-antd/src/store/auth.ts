@@ -93,7 +93,7 @@ export const useAuthStore = defineStore('auth', () => {
     await router.replace({
       path: LOGIN_PATH,
       query: {
-        // redirect: encodeURIComponent(router.currentRoute.value.fullPath),
+        redirect: encodeURIComponent(router.currentRoute.value.fullPath),
       },
     });
   }

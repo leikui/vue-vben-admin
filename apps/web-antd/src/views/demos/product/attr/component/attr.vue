@@ -18,6 +18,9 @@ import {
 import { useVbenModal } from '@vben/common-ui';
 import Dynamic from './dynamic.vue';
 import TagInput from './TagInputComponent.vue';
+import { saveProductRuleApi,updateProductRuleApi } from '#/api';
+
+const emit = defineEmits(['saveRuleSuccess'])
 const data = ref();
 
 const attrRules = ref()
@@ -31,8 +34,19 @@ const [Modal, modalApi] = useVbenModal({
 
     attrData.value.ruleValue = JSON.stringify(attrRules.value)
     console.log(attrData.value);
-
+    if(modalApi.getData().action == 1){
+      saveProductRuleApi(attrData.value).then((res)=>{
+        message.success('保存成功')
+        emit('saveRuleSuccess')
+        })
+    }else{
+      updateProductRuleApi(attrData.value).then((res)=>{
+        message.success('修改成功')
+        emit('saveRuleSuccess')
+      })
+    }
     modalApi.close();
+
   },
   onOpenChange(isOpen: boolean) {
     if (isOpen) {

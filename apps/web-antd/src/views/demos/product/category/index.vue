@@ -15,7 +15,7 @@ import {
 
 import { useVbenForm } from '#/adapter/form';
 import Add2Update from './component/Add2UpdateCategory.vue';
-import { getCategoryApi } from '#/api';
+import { getCategoryApi,deleteCategoryApi ,updateCategoryApi} from '#/api';
 import Add2UpdateCategory from './component/Add2UpdateCategory.vue';
 
 const param = ref([
@@ -153,7 +153,7 @@ function openModal(type: number, recordData?: any, pid?: number) {
   modalApi.open();
 }
 
-const showDeleteConfirm = () => {
+const showDeleteConfirm = (record:any) => {
   Modal.confirm({
     title: '删除产品分类',
     content: '确认删除产品分类？',
@@ -161,6 +161,10 @@ const showDeleteConfirm = () => {
     okType: 'danger',
     cancelText: '取消',
     onOk() {
+      deleteCategoryApi({id:record.id}).then((res)=>{
+        message.success('删除成功')
+        form.submitForm();
+      })
       console.log('OK');
     },
     onCancel() {
@@ -168,6 +172,15 @@ const showDeleteConfirm = () => {
     },
   });
 };
+
+
+function changeStatus(record:any){
+  updateCategoryApi(record).then((res)=>{
+    message.success('修改成功')
+    form.submitForm();
+  })
+  console.log(record);
+}
 </script>
 
 <template>
@@ -196,7 +209,7 @@ const showDeleteConfirm = () => {
             >添加子目录</Button
           >
           <Button type="link" @click="openModal(2, record)">编辑</Button>
-          <Button type="link" danger @click="showDeleteConfirm">删除</Button>
+          <Button type="link" danger @click="showDeleteConfirm(record)">删除</Button>
         </template>
         <template v-if="column.key === 'type'">
           <div>产品分类</div>
@@ -206,6 +219,7 @@ const showDeleteConfirm = () => {
             v-model:checked="record.status"
             checked-children="开"
             un-checked-children="关"
+            @change="changeStatus(record)"
           />
         </template>
       </template>
