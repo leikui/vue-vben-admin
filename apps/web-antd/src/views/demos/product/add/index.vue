@@ -23,19 +23,17 @@ onMounted(() => {
 })
 
 const prodContent = ref()
-const getProductInfo = async (productId) => {
-  const res = await getProductInfoApi(productId)
+const getProductInfo = async (productId:string) => {
+  const res = await getProductInfoApi({id:productId})
   firstFormApi.setValues(res)
   secondFormApi.setValues(res)
   thirdFormApi.setValues(res)
   prodContent.value = res.content
 
   if (res.sliderImages) {
-    firstImageUrl.value = res.sliderImages;
+    firstImageUrl.value = res.sliderImages.split(',');
   }
-  if (res.content) {
-    thirdImageUrl.value = res.content;
-  }
+
 }
 
 
@@ -46,7 +44,7 @@ const getCateGoryData = async () => {
   firstFormApi.updateSchema([
     {
       componentProps: {
-        options: categoryData.value
+        treeData: categoryData.value
       },
       fieldName: 'cateIds',
     }
@@ -54,15 +52,12 @@ const getCateGoryData = async () => {
 }
 
 
-//上传组件
-const firstFileList = ref([]);
-const thirdFileList = ref([]);
-const firstImageUrl = ref('');
-const thirdImageUrl = ref('');
-const loading = ref(false);
+//上传组件相关变量
+const loading = ref<boolean>(false);
+const firstImageUrl = ref<string[]>([]);
+const fileList = ref<any[]>([]);
 
 // 上传前校验
-
 const beforeUpload = (file: File) => {
   const isImage = /^image\/(jpeg|png|jpg|gif)$/i.test(file.type);
   if (!isImage) {
@@ -78,7 +73,7 @@ const beforeUpload = (file: File) => {
 };
 
 // 处理上传变化
-const handleUploadChange = (info: any,) => {
+const handleUploadChange = async (info: any) => {
   const { status, response } = info.file;
 
   if (status === 'uploading') {
@@ -87,13 +82,15 @@ const handleUploadChange = (info: any,) => {
   }
 
   if (status === 'done') {
-    console.log(response);
     loading.value = false;
+    console.log('response', response);
+
     if (response.url) {
-      firstFormApi.setFieldValue('image', response.url);
+      firstImageUrl.value = [...firstImageUrl.value, response.url];
+      firstFormApi.setFieldValue('sliderImages', firstImageUrl.value.join(','));
       message.success('上传成功');
     } else {
-      message.error(response.msg || '上传失败');
+      message.error('上传失败');
     }
   } else if (status === 'error') {
     loading.value = false;
@@ -101,14 +98,24 @@ const handleUploadChange = (info: any,) => {
   }
 };
 
+// 添加删除图片的方法
+const handleRemove = (index: number) => {
+  firstImageUrl.value.splice(index, 1);
+  firstFormApi.setFieldValue('sliderImages', firstImageUrl.value.join(','));
+};
+
 // 自定义上传方法
 const customRequest = async ({ file, onSuccess, onError }: any) => {
+
   try {
-    // 替换成你的实际上传API
-    const res = await upLoadFileAPI(
-      file,
-    );
+    const res = await upLoadFileAPI(file);
+    console.log(res);
+
+    if (res.url) {
       onSuccess(res);
+    } else {
+      onError(new Error( '上传失败'));
+    }
   } catch (error) {
     onError(error);
   }
@@ -117,10 +124,11 @@ const customRequest = async ({ file, onSuccess, onError }: any) => {
 
 
 const currentTab = ref(0);
-function onFirstSubmit(values: Record<string, any>) {
+async function onFirstSubmit(values: Record<string, any>) {
   message.success({
     content: `form1 values: ${JSON.stringify(values)}`,
   });
+  await firstFormApi.getValues();
   currentTab.value = 1;
 }
 
@@ -183,18 +191,17 @@ const [FirstForm, firstFormApi] = useVbenForm({
       label: '商品轮播图',
       // rules: 'required',
     },
+
     {
-      component: 'Cascader',
+      component: 'TreeSelect',
       componentProps: {
-        allowClear: false,
-        filterOption: true,
-        options: [],
+        allowClear: true,
+        placeholder: '请选择',
         fieldNames: { label: 'name', value: 'id', children: 'child' },
-        placeholder: '请选择父级分类',
-        showSearch: false,
         multiple: true,
-        maxTagCount: "responsive",
-        showCheckedStrategy: 'SHOW_CHILD',
+        treeCheckable: true,
+        labelInValue: false,
+        treeNodeFilterProp: 'label',
       },
       fieldName: 'cateIds',
       label: '商品分类',
@@ -207,7 +214,7 @@ const [FirstForm, firstFormApi] = useVbenForm({
         unCheckedChildren: '下架',
         class: 'w-auto',
       },
-      defaultValue: false,
+      defaultValue: true,
       fieldName: 'isShow',
       label: '商品状态',
     },
@@ -251,19 +258,19 @@ const [SecondForm, secondFormApi] = useVbenForm({
       defaultValue: '1',
       rules: 'selectRequired',
     },
-    {
-      component: 'Input',
-      dependencies: {
-        if(values) {
-          return values.radioGroup == 1;
-        },
-        // 只有指定的字段改变时，才会触发
-        triggerFields: ['radioGroup'],
-      },
-      fieldName: 'image',
-      label: '图片',
-      // rules: 'required',
-    },
+    // {
+    //   component: 'Input',
+    //   dependencies: {
+    //     if(values) {
+    //       return values.radioGroup == 1;
+    //     },
+    //     // 只有指定的字段改变时，才会触发
+    //     triggerFields: ['radioGroup'],
+    //   },
+    //   fieldName: 'slider_image',
+    //   label: '图片',
+    //   // rules: 'required',
+    // },
     {
       component: 'InputNumber',
       componentProps: {
@@ -282,6 +289,7 @@ const [SecondForm, secondFormApi] = useVbenForm({
       fieldName: 'price',
       label: '售价',
       rules:'required',
+      defaultValue: 0,
     },
     {
       component: 'InputNumber',
@@ -300,7 +308,7 @@ const [SecondForm, secondFormApi] = useVbenForm({
       },
       fieldName: 'cost',
       label: '成本价',
-      rules:'required',
+      defaultValue: 0,
     },
     {
       component: 'InputNumber',
@@ -319,7 +327,7 @@ const [SecondForm, secondFormApi] = useVbenForm({
       },
       fieldName: 'otPrice',
       label: '划线价',
-      rules:'required',
+      defaultValue: 0,
     },
     {
       component: 'InputNumber',
@@ -336,7 +344,7 @@ const [SecondForm, secondFormApi] = useVbenForm({
       },
       fieldName: 'stock',
       label: '库存',
-      rules:'required',
+      defaultValue: 10000,
     },
     {
       component: 'Input',
@@ -349,7 +357,7 @@ const [SecondForm, secondFormApi] = useVbenForm({
       },
       fieldName: 'barCode',
       label: '商品编码',
-      rules:'required',
+
     },
     // {
     //   component: 'Input',
@@ -369,7 +377,6 @@ const [SecondForm, secondFormApi] = useVbenForm({
       component: 'InputNumber',
       componentProps: {
         min: 0,
-        addonAfter:"kg"
       },
       dependencies: {
         if(values) {
@@ -378,9 +385,9 @@ const [SecondForm, secondFormApi] = useVbenForm({
         // 只有指定的字段改变时，才会触发
         triggerFields: ['radioGroup'],
       },
+      defaultValue: 0,
       fieldName: 'weight',
       label: '重量',
-      rules:'required',
     },
     {
       component: 'InputNumber',
@@ -395,9 +402,9 @@ const [SecondForm, secondFormApi] = useVbenForm({
         // 只有指定的字段改变时，才会触发
         triggerFields: ['radioGroup'],
       },
+      defaultValue: 0,
       fieldName: 'volume',
       label: '体积',
-      rules:'required',
     },
 
 
@@ -460,31 +467,39 @@ async function handleMergeSubmit() {
         </Steps>
         <div class="p-10">
           <FirstForm v-show="currentTab === 0">
-            <template #sliderImages="slotProps">
-
-              <Upload
-                v-bind="slotProps"
-                name="file"
-                list-type="picture-card"
-                class="avatar-uploader"
-                :show-upload-list="false"
-                :before-upload="beforeUpload"
-                :customRequest="customRequest"
-                @change="(info) => handleUploadChange(info, 'first')"
-              >
-                <div v-if="firstImageUrl" class="relative w-[100px] h-[100px]">
-                  <img :src="firstImageUrl" alt="商品图片" class="w-full h-full object-cover" />
+            <template #sliderImages>
+              <div class="flex flex-wrap gap-2">
+                <Upload
+                  name="file"
+                  list-type="picture-card"
+                  class="avatar-uploader"
+                  :show-upload-list="false"
+                  :multiple="true"
+                  :before-upload="beforeUpload"
+                  :custom-request="customRequest"
+                  @change="handleUploadChange"
+                >
+                  <div class="upload-placeholder">
+                    <LoadingOutlined v-if="loading" />
+                    <PlusOutlined v-else />
+                    <div class="ant-upload-text">上传商品图片</div>
+                  </div>
+                </Upload>
+                <div v-for="(url, index) in firstImageUrl" :key="index" class="relative">
+                  <img :src="url" alt="商品图片" class="w-[100px] h-[100px] object-cover rounded" />
+                  <Button
+                    type="link"
+                    class="absolute top-0 right-0 text-red-500"
+                    @click.stop="handleRemove(index)"
+                  >
+                    删除
+                  </Button>
                 </div>
-                <div v-else class="upload-placeholder">
-                  <LoadingOutlined v-if="loading" />
-                  <PlusOutlined v-else />
-                  <div class="ant-upload-text">上传商品图片</div>
-                </div>
-              </Upload>
+              </div>
             </template>
           </FirstForm>
           <SecondForm v-show="currentTab === 1" >
-            <template #image="slotProps">
+            <!-- <template #image="slotProps">
               <Upload v-bind="slotProps" v-model:file-list="fileList" name="avatar" list-type="picture-card"
                 class="avatar-uploader" :show-upload-list="false" :before-upload="beforeUpload" @change="handleUploadChange">
                 <Image v-if="imageUrl" :src="imageUrl" alt="avatar" />
@@ -494,31 +509,10 @@ async function handleMergeSubmit() {
                   <div class="ant-upload-text">上传</div>
                 </div>
               </Upload>
-            </template>
+            </template> -->
           </SecondForm>
           <ThirdForm v-show="currentTab === 2" >
             <template #content="slotProps">
-              <div class="mb-4">
-                <Upload
-                  v-bind="slotProps"
-                  name="file"
-                  list-type="picture-card"
-                  class="avatar-uploader"
-                  :show-upload-list="false"
-                  :before-upload="beforeUpload"
-                  :customRequest="customRequest"
-                  @change="(info) => handleUploadChange(info, 'third')"
-                >
-                  <div v-if="thirdImageUrl" class="relative w-[100px] h-[100px]">
-                    <img :src="thirdImageUrl" alt="详情图片" class="w-full h-full object-cover" />
-                  </div>
-                  <div v-else class="upload-placeholder">
-                    <LoadingOutlined v-if="loading" />
-                    <PlusOutlined v-else />
-                    <div class="ant-upload-text">上传详情图片</div>
-                  </div>
-                </Upload>
-              </div>
               <TEditor v-bind="slotProps" :value="prodContent" />
             </template>
           </ThirdForm>
@@ -542,5 +536,14 @@ async function handleMergeSubmit() {
   align-items: center;
   justify-content: center;
   height: 100%;
+}
+
+.ant-upload-text {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+:deep(.ant-upload-list) {
+  display: none;
 }
 </style>

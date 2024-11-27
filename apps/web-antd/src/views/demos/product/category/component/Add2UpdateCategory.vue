@@ -6,7 +6,7 @@ import { PlusOutlined, LoadingOutlined } from '@ant-design/icons-vue';
 
 import { useVbenModal } from '@vben/common-ui';
 import { useVbenForm } from '#/adapter/form';
-import { upLoadFileAPI,saveCategoryApi } from '#/api';
+import { upLoadFileAPI,saveCategoryApi,updateCategoryApi } from '#/api';
 const data = ref();
 
 const [Modal, modalApi] = useVbenModal({
@@ -169,7 +169,15 @@ function onSubmit(values: Record<string, any>) {
   if (values.pid == null || values.pid == '' || values.pid == undefined) {
     values.pid = 0;
   }
-  saveCategoryApi({...values,type:1});
+  console.log(data.value);
+
+  if (data.value.record.id) {
+    updateCategoryApi({...values,id:data.value.record.id,type:1});
+    message.success('编辑成功');
+  }else{
+    saveCategoryApi({...values,type:1});
+    message.success('创建成功');
+  }
   //关闭弹窗
   modalApi.close();
   //重置form

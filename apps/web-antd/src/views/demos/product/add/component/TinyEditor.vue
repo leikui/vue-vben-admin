@@ -11,6 +11,7 @@
 
 <script setup>
 import {computed, reactive, watch, ref, nextTick, onMounted} from "vue"; //全屏
+import { upLoadFileAPI } from "#/api";
 
 import tinymce from "tinymce/tinymce";
 // import "tinymce/skins/content/default/content.css";
@@ -153,33 +154,34 @@ const init = reactive({
   // setup: function (editor) {
   // },
   //图片上传  -实列 具体请根据官网补充-
-  images_upload_handler: function (blobInfo, progress) {
-    new Promise((resolve, reject) => {
-      let file = blobInfo.blob();
-      if (file.size / 1024 / 1024 > 200) {
-        reject({
-          message: "上传失败，图片大小请控制在 200M 以内",
-          remove: true,
-        });
-      }
-        const formData = new FormData();
-        formData.append("file", file);
-        console.log( formData)
-        axios.post("/api/upload/upload", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          onUploadProgress: (progressEvent) => {
-            progress(
-                Math.round((progressEvent.loaded / progressEvent.total) * 100)
-            );
-          },
-        }).then((res) => {
-              resolve(res.data.url);
-        })
-        .catch()
+  images_upload_handler: async function (blobInfo, progress) {
+    try {
+      const file = blobInfo.blob();
 
-    });
+      // 文件大小检查
+      if (file.size / 1024 / 1024 > 10) {
+        throw new Error("上传失败，图片大小请控制在 10M 以内");
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await upLoadFileAPI(file);
+
+      if ( response.url) {
+        return response.url;
+      } else {
+        throw new Error("上传失败，服务器返回异常");
+      }
+
+    } catch (error) {
+      // 统一错误处理
+      console.error("图片上传失败:", error);
+      throw {
+        message: error.message || "图片上传失败，请重试",
+        remove: true
+      };
+    }
   },
 });
 

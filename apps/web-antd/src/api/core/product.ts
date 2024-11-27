@@ -23,10 +23,10 @@ export async function getProductApi(params: any) {
 }
 
 /**
- * 获取用户信息
+ * 获取商品详情
  */
 export async function getProductInfoApi(params: any) {
-  return requestClient.get('/product/product/'+params);
+  return requestClient.get('/center/good/web/product/info',params);
 }
 
 /**
