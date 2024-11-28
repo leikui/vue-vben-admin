@@ -6,7 +6,7 @@ import { Page } from '@vben/common-ui';
 import { Button, Card, message, Step, Steps, Switch ,Upload,Image} from 'ant-design-vue';
 import { LoadingOutlined ,PlusOutlined} from "@ant-design/icons-vue";
 import { useVbenForm } from '#/adapter/form';
-import { getCategoryApi ,getProductInfoApi, upLoadFileAPI} from "#/api";
+import { getCategoryApi ,getProductInfoApi, upLoadFileAPI,saveProductApi,getProductRuleListApi} from "#/api";
 import TEditor from './component/TinyEditor.vue';
 import {useRoute} from 'vue-router';
 
@@ -20,6 +20,7 @@ onMounted(() => {
   }
 
   getCateGoryData()
+  getProductRuleList()
 })
 
 const prodContent = ref()
@@ -33,6 +34,22 @@ const getProductInfo = async (productId:string) => {
   if (res.sliderImages) {
     firstImageUrl.value = res.sliderImages.split(',');
   }
+
+}
+
+const productRuleList = ref([])
+const getProductRuleList = async () => {
+  const res = await getProductRuleListApi({page:1,limit:9999})
+  productRuleList.value = res.list
+  console.log(res);
+  secondFormApi.updateSchema([
+    {
+      componentProps: {
+        options: productRuleList.value
+      },
+      fieldName: 'selectRule',
+    }
+  ])
 
 }
 
@@ -171,7 +188,7 @@ const [FirstForm, firstFormApi] = useVbenForm({
       },
       fieldName: 'storeName',
       label: '商品名称',
-      rules: 'required',
+      // rules: 'required',
     },
 
     {
@@ -181,7 +198,7 @@ const [FirstForm, firstFormApi] = useVbenForm({
       },
       fieldName: 'unitName',
       label: '单位',
-      rules: 'required',
+      // rules: 'required',
     },
 
     {
@@ -218,7 +235,17 @@ const [FirstForm, firstFormApi] = useVbenForm({
       fieldName: 'isShow',
       label: '商品状态',
     },
+    {
+      component: 'InputNumber',
+      componentProps: {
+        min: 0,
+      },
 
+      fieldName: 'sort',
+      label: '排序',
+      rules:'required',
+      defaultValue: 0,
+    },
 
   ],
   submitButtonOptions: {
@@ -258,6 +285,24 @@ const [SecondForm, secondFormApi] = useVbenForm({
       defaultValue: '1',
       rules: 'selectRequired',
     },
+    {
+      component: 'Select',
+      componentProps: {
+        allowClear: false,
+        filterOption: true,
+        options: productRuleList.value,
+        fieldNames: { label: 'ruleName', value: 'id' },
+        placeholder: '请选择规格',
+        showSearch: false,
+        mode: 'multiple',
+        onChange: (value:any) => {
+          console.log(value);
+        }
+      },
+      fieldName: 'selectRule',
+      label: '规格',
+    },
+
     // {
     //   component: 'Input',
     //   dependencies: {
@@ -359,6 +404,18 @@ const [SecondForm, secondFormApi] = useVbenForm({
       label: '商品编码',
 
     },
+
+    {
+      component: 'InputNumber',
+      componentProps: {
+        min: 0,
+        addonAfter:"件"
+      },
+
+      fieldName: 'ficti',
+      label: '虚拟销量',
+      defaultValue: 0,
+    },
     // {
     //   component: 'Input',
 
@@ -407,12 +464,105 @@ const [SecondForm, secondFormApi] = useVbenForm({
       label: '体积',
     },
 
-
+    {
+      component: 'EditTable',
+      fieldName: 'specTable',
+      label: '规格明细',
+      componentProps: {
+        columns: [
+          { 
+            title: '规格', 
+            dataIndex: 'specs',
+            width: 200,
+          },
+          {
+            title: '图片',
+            dataIndex: 'image',
+            component: 'Upload',
+            componentProps: {
+              listType: 'picture-card',
+              maxCount: 1,
+              accept: 'image/*'
+            },
+            width: 100,
+          },
+          {
+            title: '售价',
+            dataIndex: 'price',
+            component: 'InputNumber',
+            componentProps: {
+              min: 0,
+              precision: 2,
+              addonAfter: '元'
+            },
+            width: 150,
+          },
+          {
+            title: '成本价',
+            dataIndex: 'cost',
+            component: 'InputNumber',
+            componentProps: {
+              min: 0,
+              precision: 2,
+              addonAfter: '元'
+            },
+            width: 150,
+          },
+          {
+            title: '原价',
+            dataIndex: 'otPrice',
+            component: 'InputNumber',
+            componentProps: {
+              min: 0,
+              precision: 2,
+              addonAfter: '元'
+            },
+            width: 150,
+          },
+          {
+            title: '库存',
+            dataIndex: 'stock',
+            component: 'InputNumber',
+            componentProps: {
+              min: 0,
+              addonAfter: '件'
+            },
+            width: 150,
+          },
+          {
+            title: '商品编号',
+            dataIndex: 'barCode',
+            component: 'Input',
+            width: 150,
+          },
+          {
+            title: '重量',
+            dataIndex: 'weight',
+            component: 'InputNumber',
+            componentProps: {
+              min: 0,
+              addonAfter: 'KG'
+            },
+            width: 150,
+          },
+          {
+            title: '体积',
+            dataIndex: 'volume',
+            component: 'InputNumber',
+            componentProps: {
+              min: 0,
+              addonAfter: 'm³'
+            },
+            width: 150,
+          }
+        ]
+      }
+    }
   ],
   submitButtonOptions: {
     content: '下一步',
   },
-  wrapperClass: 'grid-cols-1 md:grid-cols-1 lg:grid-cols-1',
+  wrapperClass: 'grid-cols-12 md:grid-cols-1 lg:grid-cols-1',
 });
 
 const [ThirdForm, thirdFormApi] = useVbenForm({
@@ -444,10 +594,35 @@ const [ThirdForm, thirdFormApi] = useVbenForm({
 
 const needMerge = ref(true);
 async function handleMergeSubmit() {
+
+  let attrvalue:any[] = []
+  let av = await secondFormApi.getValues()
+
+  const avnew = {...av,attrValue:JSON.stringify({规格:"默认"})}
+
+  console.log(attrvalue);
+
   const values = await firstFormApi
     .merge(secondFormApi)
     .merge(thirdFormApi)
-    .submitAllForm(needMerge.value);
+    .submitAllForm(needMerge.value)
+    //组装数据
+    values.specType = 0
+    values.cateId = values.cateIds.join(',')
+    values.type = 1
+
+    //选中的规格attr
+    // const ruleV = JSON.parse(productRuleList.value.find(item => item.id == values.selectRule).ruleValue)\
+    // ruleV.attrName = ruleV.value
+    // ruleV.
+
+    values.attr = [productRuleList.value.find(item => item.id == values.selectRule)]
+    console.log(avnew);
+
+    attrvalue.push(avnew)
+    //规格属性attrValue
+    values.attrValue = attrvalue
+    saveProductApi(values)
   message.success({
     content: `merged form values: ${JSON.stringify(values)}`,
   });

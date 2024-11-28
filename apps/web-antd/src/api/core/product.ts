@@ -30,6 +30,13 @@ export async function getProductInfoApi(params: any) {
 }
 
 /**
+ * 保存商品
+ */
+export async function saveProductApi(params: any) {
+  return requestClient.post('/center/good/web/product/save',params);
+}
+
+/**
  * 获取订单列表
  */
 export async function getProductOrderListApi(params: any) {
