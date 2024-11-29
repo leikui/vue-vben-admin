@@ -3,13 +3,19 @@ import { onMounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 
-import { Button, Card, message, Step, Steps, Switch ,Upload,Image} from 'ant-design-vue';
-import { LoadingOutlined ,PlusOutlined} from "@ant-design/icons-vue";
+import { Button, Card, message, Step, Steps, Switch ,Upload,Image,Table,Input,InputNumber,Modal} from 'ant-design-vue';
+import { LoadingOutlined ,PlusOutlined,DeleteOutlined} from "@ant-design/icons-vue";
 import { useVbenForm } from '#/adapter/form';
 import { getCategoryApi ,getProductInfoApi, upLoadFileAPI,saveProductApi,getProductRuleListApi} from "#/api";
 import TEditor from './component/TinyEditor.vue';
 import {useRoute} from 'vue-router';
+import type { UploadProps } from 'ant-design-vue';
 
+// 在文件顶部添加类型定义
+interface ColumnType {
+  title: string;
+  dataIndex: string;
+}
 
 const router = useRoute();
 onMounted(() => {
@@ -72,7 +78,7 @@ const getCateGoryData = async () => {
 //上传组件相关变量
 const loading = ref<boolean>(false);
 const firstImageUrl = ref<string[]>([]);
-const fileList = ref<any[]>([]);
+const fileList = ref<UploadProps['fileList']>([]);
 
 // 上传前校验
 const beforeUpload = (file: File) => {
@@ -92,6 +98,7 @@ const beforeUpload = (file: File) => {
 // 处理上传变化
 const handleUploadChange = async (info: any) => {
   const { status, response } = info.file;
+  fileList.value = info.fileList;
 
   if (status === 'uploading') {
     loading.value = true;
@@ -100,10 +107,8 @@ const handleUploadChange = async (info: any) => {
 
   if (status === 'done') {
     loading.value = false;
-    console.log('response', response);
-
     if (response.url) {
-      firstImageUrl.value = [...firstImageUrl.value, response.url];
+      firstImageUrl.value = fileList.value.map(file => file.response?.url || file.url);
       firstFormApi.setFieldValue('sliderImages', firstImageUrl.value.join(','));
       message.success('上传成功');
     } else {
@@ -115,10 +120,37 @@ const handleUploadChange = async (info: any) => {
   }
 };
 
-// 添加删除图片的方法
-const handleRemove = (index: number) => {
-  firstImageUrl.value.splice(index, 1);
+// 修改删除方法
+const handleRemove = (file: any) => {
+  const index = fileList.value.indexOf(file);
+  const newFileList = fileList.value.slice();
+  newFileList.splice(index, 1);
+  fileList.value = newFileList;
+
+  firstImageUrl.value = newFileList.map(file => file.response?.url || file.url);
   firstFormApi.setFieldValue('sliderImages', firstImageUrl.value.join(','));
+  return true;
+};
+
+// 添加预览相关的响应式变量
+const previewVisible = ref<boolean>(false);
+const previewImage = ref<string>('');
+const previewTitle = ref<string>('');
+
+// 修改预览处理函数
+const handlePreview = async (file: UploadProps['fileList'][number]) => {
+  if (!file.url && !file.preview) {
+    file.preview = (await getBase64(file.originFileObj)) as string;
+  }
+  previewImage.value = file.url || file.preview;
+  previewVisible.value = true;
+  previewTitle.value = file.name || file.url.substring(file.url.lastIndexOf('/') + 1);
+};
+
+// 添加取消预览函数
+const handleCancel = () => {
+  previewVisible.value = false;
+  previewTitle.value = '';
 };
 
 // 自定义上传方法
@@ -266,25 +298,7 @@ const [SecondForm, secondFormApi] = useVbenForm({
     content: '上一步',
   },
   schema: [
-    {
-      component: 'RadioGroup',
-      componentProps: {
-        options: [
-          {
-            label: '单规格',
-            value: '1',
-          },
-          // {
-          //   label: '多规格',
-          //   value: '2',
-          // },
-        ],
-      },
-      fieldName: 'radioGroup',
-      label: '单选组',
-      defaultValue: '1',
-      rules: 'selectRequired',
-    },
+
     {
       component: 'Select',
       componentProps: {
@@ -294,15 +308,140 @@ const [SecondForm, secondFormApi] = useVbenForm({
         fieldNames: { label: 'ruleName', value: 'id' },
         placeholder: '请选择规格',
         showSearch: false,
-        mode: 'multiple',
         onChange: (value:any) => {
           console.log(value);
+          const combinations = getSpecCombinations(value);
+          // 从组合中提取唯一的规格名称作为表头
+          const headers = combinations.length > 0
+            ? Object.keys(combinations[0]).map(key => ({
+                title: key,
+                dataIndex: key
+              }))
+            : [];
+
+          // 添加规格和规格值列
+          attrColumns.value = [
+            ...headers,
+            {title:'图片',dataIndex:'image'},
+            {title:'售价',dataIndex:'price'},
+            {title:'库存',dataIndex:'stock'},
+            {title:'商品编号',dataIndex:'sales'},
+            {title:'重量',dataIndex:'weight'},
+            {title:'体积',dataIndex:'volume'},
+            {title:'操作',dataIndex:'action'}
+          ];
+
+          console.log(combinations);
+
+          // 转换数据格式
+          specData.value = combinations.map(item => {
+            // 将每个规格组合转换为表格行数据
+            const rowData:any = {
+              ...item, // 展开规格值作为独立列
+              attrValue:JSON.stringify(item),
+              image: '', // 图片列
+              price: 0, // 售价列
+              stock: 0, // 库存列
+              sales: '', // 商品编号列
+              weight: 0, // 重量列
+              volume: 0, // 体积列
+
+            };
+            return rowData;
+          });
+          console.log(JSON.stringify(combinations));
         }
       },
       fieldName: 'selectRule',
       label: '规格',
     },
 
+    {
+      component: 'Input',
+      dependencies: {
+
+        // 只有指定的字段改变时，才会触发
+        triggerFields: ['radioGroup'],
+      },
+      fieldName: 'test',
+      label: '商品属性',
+      // rules: 'required',
+    },
+    // {
+    //   component: 'InputNumber',
+    //   componentProps: {
+    //     min: 0,
+    //     step:0.01,
+    //     precision: 2,
+    //     addonAfter:"元"
+    //   },
+    //   dependencies: {
+    //     if(values) {
+    //       return values.radioGroup == 1;
+    //     },
+    //     // 只有指定的字段改变时，才会触发
+    //     triggerFields: ['radioGroup'],
+    //   },
+    //   fieldName: 'price',
+    //   label: '售价',
+    //   rules:'required',
+    //   defaultValue: 0,
+    // },
+    // {
+    //   component: 'InputNumber',
+    //   componentProps: {
+    //     min: 0,
+    //     step:0.01,
+    //     precision: 2,
+    //     addonAfter:"元"
+    //   },
+    //   dependencies: {
+    //     if(values) {
+    //       return values.radioGroup == 1;
+    //     },
+    //     // 只有指定的字段改变时，才会触发
+    //     triggerFields: ['radioGroup'],
+    //   },
+    //   fieldName: 'cost',
+    //   label: '成本价',
+    //   defaultValue: 0,
+    // },
+    // {
+    //   component: 'InputNumber',
+    //   componentProps: {
+    //     min: 0,
+    //     step:0.01,
+    //     precision: 2,
+    //     addonAfter:"元"
+    //   },
+    //   dependencies: {
+    //     if(values) {
+    //       return values.radioGroup == 1;
+    //     },
+    //     // 只有指定的字段改变时，才会触发
+    //     triggerFields: ['radioGroup'],
+    //   },
+    //   fieldName: 'otPrice',
+    //   label: '划线价',
+    //   defaultValue: 0,
+    // },
+    // {
+    //   component: 'InputNumber',
+    //   componentProps: {
+    //     min: 0,
+    //     addonAfter:"件"
+    //   },
+    //   dependencies: {
+    //     if(values) {
+    //       return values.radioGroup == 1;
+    //     },
+    //     // 只有指定的字段改变时，才会触发
+    //     triggerFields: ['radioGroup'],
+    //   },
+    //   fieldName: 'stock',
+    //   label: '库存',
+    //   defaultValue: 10000,
+    // },
     // {
     //   component: 'Input',
     //   dependencies: {
@@ -312,110 +451,22 @@ const [SecondForm, secondFormApi] = useVbenForm({
     //     // 只有指定的字段改变时，才会触发
     //     triggerFields: ['radioGroup'],
     //   },
-    //   fieldName: 'slider_image',
-    //   label: '图片',
-    //   // rules: 'required',
+    //   fieldName: 'barCode',
+    //   label: '商品编码',
+
     // },
-    {
-      component: 'InputNumber',
-      componentProps: {
-        min: 0,
-        step:0.01,
-        precision: 2,
-        addonAfter:"元"
-      },
-      dependencies: {
-        if(values) {
-          return values.radioGroup == 1;
-        },
-        // 只有指定的字段改变时，才会触发
-        triggerFields: ['radioGroup'],
-      },
-      fieldName: 'price',
-      label: '售价',
-      rules:'required',
-      defaultValue: 0,
-    },
-    {
-      component: 'InputNumber',
-      componentProps: {
-        min: 0,
-        step:0.01,
-        precision: 2,
-        addonAfter:"元"
-      },
-      dependencies: {
-        if(values) {
-          return values.radioGroup == 1;
-        },
-        // 只有指定的字段改变时，才会触发
-        triggerFields: ['radioGroup'],
-      },
-      fieldName: 'cost',
-      label: '成本价',
-      defaultValue: 0,
-    },
-    {
-      component: 'InputNumber',
-      componentProps: {
-        min: 0,
-        step:0.01,
-        precision: 2,
-        addonAfter:"元"
-      },
-      dependencies: {
-        if(values) {
-          return values.radioGroup == 1;
-        },
-        // 只有指定的字段改变时，才会触发
-        triggerFields: ['radioGroup'],
-      },
-      fieldName: 'otPrice',
-      label: '划线价',
-      defaultValue: 0,
-    },
-    {
-      component: 'InputNumber',
-      componentProps: {
-        min: 0,
-        addonAfter:"件"
-      },
-      dependencies: {
-        if(values) {
-          return values.radioGroup == 1;
-        },
-        // 只有指定的字段改变时，才会触发
-        triggerFields: ['radioGroup'],
-      },
-      fieldName: 'stock',
-      label: '库存',
-      defaultValue: 10000,
-    },
-    {
-      component: 'Input',
-      dependencies: {
-        if(values) {
-          return values.radioGroup == 1;
-        },
-        // 只有指定的字段改变时，才会触发
-        triggerFields: ['radioGroup'],
-      },
-      fieldName: 'barCode',
-      label: '商品编码',
 
-    },
+    // {
+    //   component: 'InputNumber',
+    //   componentProps: {
+    //     min: 0,
+    //     addonAfter:"件"
+    //   },
 
-    {
-      component: 'InputNumber',
-      componentProps: {
-        min: 0,
-        addonAfter:"件"
-      },
-
-      fieldName: 'ficti',
-      label: '虚拟销量',
-      defaultValue: 0,
-    },
+    //   fieldName: 'ficti',
+    //   label: '虚拟销量',
+    //   defaultValue: 0,
+    // },
     // {
     //   component: 'Input',
 
@@ -430,134 +481,39 @@ const [SecondForm, secondFormApi] = useVbenForm({
     //   label: '条形码',
     //   rules:'required',
     // },
-    {
-      component: 'InputNumber',
-      componentProps: {
-        min: 0,
-      },
-      dependencies: {
-        if(values) {
-          return values.radioGroup == 1;
-        },
-        // 只有指定的字段改变时，才会触发
-        triggerFields: ['radioGroup'],
-      },
-      defaultValue: 0,
-      fieldName: 'weight',
-      label: '重量',
-    },
-    {
-      component: 'InputNumber',
-      componentProps: {
-        min: 0,
-        addonAfter:"m³"
-      },
-      dependencies: {
-        if(values) {
-          return values.radioGroup == 1;
-        },
-        // 只有指定的字段改变时，才会触发
-        triggerFields: ['radioGroup'],
-      },
-      defaultValue: 0,
-      fieldName: 'volume',
-      label: '体积',
-    },
-
-    {
-      component: 'EditTable',
-      fieldName: 'specTable',
-      label: '规格明细',
-      componentProps: {
-        columns: [
-          { 
-            title: '规格', 
-            dataIndex: 'specs',
-            width: 200,
-          },
-          {
-            title: '图片',
-            dataIndex: 'image',
-            component: 'Upload',
-            componentProps: {
-              listType: 'picture-card',
-              maxCount: 1,
-              accept: 'image/*'
-            },
-            width: 100,
-          },
-          {
-            title: '售价',
-            dataIndex: 'price',
-            component: 'InputNumber',
-            componentProps: {
-              min: 0,
-              precision: 2,
-              addonAfter: '元'
-            },
-            width: 150,
-          },
-          {
-            title: '成本价',
-            dataIndex: 'cost',
-            component: 'InputNumber',
-            componentProps: {
-              min: 0,
-              precision: 2,
-              addonAfter: '元'
-            },
-            width: 150,
-          },
-          {
-            title: '原价',
-            dataIndex: 'otPrice',
-            component: 'InputNumber',
-            componentProps: {
-              min: 0,
-              precision: 2,
-              addonAfter: '元'
-            },
-            width: 150,
-          },
-          {
-            title: '库存',
-            dataIndex: 'stock',
-            component: 'InputNumber',
-            componentProps: {
-              min: 0,
-              addonAfter: '件'
-            },
-            width: 150,
-          },
-          {
-            title: '商品编号',
-            dataIndex: 'barCode',
-            component: 'Input',
-            width: 150,
-          },
-          {
-            title: '重量',
-            dataIndex: 'weight',
-            component: 'InputNumber',
-            componentProps: {
-              min: 0,
-              addonAfter: 'KG'
-            },
-            width: 150,
-          },
-          {
-            title: '体积',
-            dataIndex: 'volume',
-            component: 'InputNumber',
-            componentProps: {
-              min: 0,
-              addonAfter: 'm³'
-            },
-            width: 150,
-          }
-        ]
-      }
-    }
+    // {
+    //   component: 'InputNumber',
+    //   componentProps: {
+    //     min: 0,
+    //   },
+    //   dependencies: {
+    //     if(values) {
+    //       return values.radioGroup == 1;
+    //     },
+    //     // 只有指定的字段改变时，才会触发
+    //     triggerFields: ['radioGroup'],
+    //   },
+    //   defaultValue: 0,
+    //   fieldName: 'weight',
+    //   label: '重量',
+    // },
+    // {
+    //   component: 'InputNumber',
+    //   componentProps: {
+    //     min: 0,
+    //     addonAfter:"m³"
+    //   },
+    //   dependencies: {
+    //     if(values) {
+    //       return values.radioGroup == 1;
+    //     },
+    //     // 只有指定的字段改变时，才会触发
+    //     triggerFields: ['radioGroup'],
+    //   },
+    //   defaultValue: 0,
+    //   fieldName: 'volume',
+    //   label: '体积',
+    // },
   ],
   submitButtonOptions: {
     content: '下一步',
@@ -600,7 +556,8 @@ async function handleMergeSubmit() {
 
   const avnew = {...av,attrValue:JSON.stringify({规格:"默认"})}
 
-  console.log(attrvalue);
+  console.log(specData.value);
+
 
   const values = await firstFormApi
     .merge(secondFormApi)
@@ -628,6 +585,76 @@ async function handleMergeSubmit() {
   });
 }
 
+//获取规格值
+// 获取规格组合
+const getSpecCombinations = (ruleId: string) => {
+  const rule = productRuleList.value.find(item => item.id == ruleId);
+  if (!rule) return [];
+
+  const ruleValue = JSON.parse(rule.ruleValue);
+
+  // 获取所有规格值数组
+  const specArrays = ruleValue.map(item => {
+    return item.detail.map(detail => ({
+      [item.value]: detail
+    }));
+  });
+
+  // 递归组合所有规格
+  const combine = (arrays: any[]) => {
+    if (arrays.length === 0) return [{}];
+
+    const [first, ...rest] = arrays;
+    const restCombinations = combine(rest);
+
+    return first.reduce((acc: any[], item: any) => {
+      return [
+        ...acc,
+        ...restCombinations.map(combination => ({
+          ...combination,
+          ...item
+        }))
+      ];
+    }, []);
+  };
+
+  return combine(specArrays);
+};
+
+
+const attrColumns = ref<ColumnType[]>([]);
+const specData = ref([])
+
+// 添加图片上传处理函数
+const handleSpecImageUpload = async (file: File, record: any) => {
+  try {
+    const res = await upLoadFileAPI(file);
+    if (res.url) {
+      record.image = res.url;
+      message.success('上传成功');
+    } else {
+      message.error('上传失败');
+    }
+  } catch (error) {
+    message.error('上传失败');
+  }
+};
+
+// 删除规格图片
+const handleSpecImageRemove = (record: any) => {
+  record.image = '';
+};
+
+// 添加 base64 转换函数
+function getBase64(file: File) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+  });
+}
+
 </script>
 
 <template>
@@ -643,48 +670,99 @@ async function handleMergeSubmit() {
         <div class="p-10">
           <FirstForm v-show="currentTab === 0">
             <template #sliderImages>
-              <div class="flex flex-wrap gap-2">
+              <div class="clearfix">
                 <Upload
-                  name="file"
+                  v-model:file-list="fileList"
                   list-type="picture-card"
-                  class="avatar-uploader"
-                  :show-upload-list="false"
-                  :multiple="true"
                   :before-upload="beforeUpload"
                   :custom-request="customRequest"
                   @change="handleUploadChange"
+                  @preview="handlePreview"
                 >
-                  <div class="upload-placeholder">
-                    <LoadingOutlined v-if="loading" />
-                    <PlusOutlined v-else />
-                    <div class="ant-upload-text">上传商品图片</div>
+                  <div v-if="fileList.length < 8">
+                    <PlusOutlined />
+                    <div style="margin-top: 8px">上传图片</div>
                   </div>
                 </Upload>
-                <div v-for="(url, index) in firstImageUrl" :key="index" class="relative">
-                  <img :src="url" alt="商品图片" class="w-[100px] h-[100px] object-cover rounded" />
-                  <Button
-                    type="link"
-                    class="absolute top-0 right-0 text-red-500"
-                    @click.stop="handleRemove(index)"
-                  >
-                    删除
-                  </Button>
-                </div>
+                <Modal
+                  :open="previewVisible"
+                  :title="previewTitle"
+                  :footer="null"
+                  @cancel="handleCancel"
+                >
+                  <img alt="预图片" style="width: 100%" :src="previewImage" />
+                </Modal>
               </div>
             </template>
           </FirstForm>
           <SecondForm v-show="currentTab === 1" >
-            <!-- <template #image="slotProps">
-              <Upload v-bind="slotProps" v-model:file-list="fileList" name="avatar" list-type="picture-card"
-                class="avatar-uploader" :show-upload-list="false" :before-upload="beforeUpload" @change="handleUploadChange">
-                <Image v-if="imageUrl" :src="imageUrl" alt="avatar" />
-                <div v-else>
-                  <loading-outlined v-if="loading"></loading-outlined>
-                  <plus-outlined v-else></plus-outlined>
-                  <div class="ant-upload-text">上传</div>
-                </div>
-              </Upload>
-            </template> -->
+            <template #test="slotProps">
+              <div class="w-full" v-bind="slotProps">
+                <Table :columns="attrColumns" :dataSource="specData" bordered :pagination="false">
+                  <template #bodyCell="{ column, record }">
+                    <template v-if="column.dataIndex === 'price'">
+                      <InputNumber
+                        v-model:value="record.price"
+                        :min="0"
+                        :step="0.01"
+                        :precision="2"
+                        :addon-after="'元'"
+                      />
+                    </template>
+                    <template v-else-if="column.dataIndex === 'stock'">
+                      <InputNumber
+                        v-model:value="record.stock"
+                        :min="0"
+                        :addon-after="'件'"
+                      />
+                    </template>
+                    <template v-else-if="column.dataIndex === 'image'">
+                      <Upload
+                        :showUploadList="false"
+                        :maxCount="1"
+                        accept="image/*"
+                        :beforeUpload="(file) => {
+                          handleSpecImageUpload(file, record);
+                          return false;
+                        }"
+                        listType="picture-card"
+                        :style="{width: '40px', height: '40px'}"
+                      >
+                        <div v-if="!record.image" style="width: 40px; height: 40px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                          <PlusOutlined style="font-size: 14px;" />
+                          <div style="margin-top: 4px; font-size: 12px;">上传</div>
+                        </div>
+                        <div v-else class="relative" style="width: 40px; height: 40px;">
+                          <img :src="record.image" style="width: 40px; height: 40px; object-fit: cover;" />
+                          <Button
+                            type="link"
+                            class="absolute top-0 right-0 text-red-500"
+                            style="padding: 0; height: auto; font-size: 12px;"
+                            @click.stop="(e) => {
+                              e.stopPropagation();
+                              handleSpecImageRemove(record);
+                            }"
+                          >
+                            删除
+                          </Button>
+                        </div>
+                      </Upload>
+                    </template>
+                    <template v-else-if="column.dataIndex === 'sales'">
+                      <Input v-model:value="record.sales" />
+                    </template>
+                    <template v-else-if="column.dataIndex === 'weight'">
+                      <InputNumber v-model:value="record.weight" :min="0" />
+                    </template>
+                    <template v-else-if="column.dataIndex === 'volume'">
+                      <InputNumber v-model:value="record.volume" :min="0" :addon-after="'m³'" />
+                    </template>
+                  </template>
+                </Table>
+              </div>
+
+
+            </template>
           </SecondForm>
           <ThirdForm v-show="currentTab === 2" >
             <template #content="slotProps">
@@ -698,27 +776,29 @@ async function handleMergeSubmit() {
 </template>
 
 <style scoped>
-.avatar-uploader {
-  :deep(.ant-upload) {
-    width: 100px;
-    height: 100px;
-  }
+.ant-upload-select-picture-card i {
+  font-size: 32px;
+  color: #999;
 }
 
-.upload-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-}
-
-.ant-upload-text {
+.ant-upload-select-picture-card .ant-upload-text {
   margin-top: 8px;
-  font-size: 12px;
+  color: #666;
 }
 
-:deep(.ant-upload-list) {
-  display: none;
+/* 规格表格中的上传组件样式 */
+.ant-table :deep(.ant-upload-list-picture-card .ant-upload-list-item) {
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.ant-table :deep(.ant-upload-select-picture-card) {
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.ant-table :deep(.ant-upload-list-picture-card-container) {
+  width: 40px !important;
+  height: 40px !important;
 }
 </style>
