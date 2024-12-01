@@ -29,18 +29,150 @@ onMounted(() => {
   getProductRuleList()
 })
 
+const attrData = ref([])
 const prodContent = ref()
-const getProductInfo = async (productId:string) => {
-  const res = await getProductInfoApi({id:productId})
-  firstFormApi.setValues(res)
-  secondFormApi.setValues(res)
-  thirdFormApi.setValues(res)
-  prodContent.value = res.content
 
-  if (res.sliderImages) {
-    firstImageUrl.value = res.sliderImages.split(',');
+// 先定义 handleRuleChange 函数
+const handleRuleChange = (value: any) => {
+  if (!value) return;
+
+  const combinations = getSpecCombinations(value);
+  // 从组合中提取唯一的规格名称作为表头
+  const headers = combinations.length > 0
+    ? Object.keys(combinations[0]).map(key => ({
+        title: key,
+        dataIndex: key
+      }))
+    : [];
+
+  // 添加规格和规格值列
+  attrColumns.value = [
+    ...headers,
+    {title:'图片',dataIndex:'image'},
+    {title:'售价',dataIndex:'price'},
+    {title:'库存',dataIndex:'stock'},
+    {title:'重量',dataIndex:'weight'},
+    {title:'体积',dataIndex:'volume'},
+    {title:'商品编号',dataIndex:'sales'},
+    {title:'操作',dataIndex:'action'},
+  ];
+
+  // 转换数据格式
+  if (specData.value.length === 0) { // 只在没有现有数据时设置默认值
+    specData.value = combinations.map(item => ({
+      ...item,
+      attrValue: JSON.stringify(item),
+      image: '',
+      price: 0,
+      stock: 1000,
+      sales: '',
+      weight: 0,
+      volume: 0,
+    }));
+  }
+};
+
+// 然后再定义 getProductInfo
+const getProductInfo = async (productId: string) => {
+  const res = await getProductInfoApi({id: productId})
+
+  // 如果是编辑模式，添加id参数和保留原有attr数据
+  if (router.query.productId) {
+    attrData.value = res.attr
   }
 
+  // 1. 处理基础表单数据
+  firstFormApi.setValues({
+    storeName: res.storeName,
+    storeInfo: res.storeInfo,
+    unitName: res.unitName,
+    image: res.image,
+    sliderImage: res.sliderImage,
+    cateIds: res.cateId.split(',').map(id => Number(id)),
+    isShow: res.isShow,
+    sort: res.sort
+  })
+
+  // 2. 处理商品图片显示
+  if (res.image) {
+    mainImageUrl.value = res.image
+    mainImageFileList.value = [{
+      uid: '-1',
+      name: 'image.png',
+      status: 'done',
+      url: res.image,
+    }]
+  }
+
+  if (res.sliderImage) {
+    firstImageUrl.value = res.sliderImage.split(',')
+    fileList.value = res.sliderImage.split(',').map((url, index) => ({
+      uid: `-${index}`,
+      name: `image${index}.png`,
+      status: 'done',
+      url: url,
+    }))
+  }
+
+  // 3. 处理规格数据
+  if (res.attr?.[0]?.attrName === '默认') {
+    // 默认规格模式
+    secondFormApi.setFieldValue('selectRule', '')
+
+    // 设置默认规格的表头
+    attrColumns.value = [
+      {title: '规格', dataIndex: '默认'},
+      {title: '图片', dataIndex: 'image'},
+      {title: '售价', dataIndex: 'price'},
+      {title: '库存', dataIndex: 'stock'},
+      {title: '重量', dataIndex: 'weight'},
+      {title: '体积', dataIndex: 'volume'},
+      {title: '商品编号', dataIndex: 'sales'},
+      {title: '操作', dataIndex: 'action'}
+    ]
+
+    // 设置规格数据
+    specData.value = res.attrValue.map(item => ({
+      默认: '默认',
+      image: item.image || '',
+      price: Number(item.price),
+      stock: Number(item.stock),
+      weight: Number(item.weight),
+      volume: Number(item.volume),
+      sales: item.suk,
+      attrValue: item.attrValue
+    }))
+  } else {
+    // 多规格模式处理逻辑保持不变
+    const ruleList = await getProductRuleListApi({page:1,limit:9999})
+    const matchedRule = ruleList.list.find(rule => {
+      const ruleValue = JSON.parse(rule.ruleValue)
+      return ruleValue.some(item =>
+        res.attr.some(attr => attr.attrName === item.value)
+      )
+    })
+
+    if (matchedRule) {
+      secondFormApi.setFieldValue('selectRule', matchedRule.id)
+      handleRuleChange(matchedRule.id)
+
+      // 用服务端返回的数据覆盖本地生成的规格数据
+      specData.value = res.attrValue.map(item => ({
+        ...JSON.parse(item.attrValue),
+        image: item.image || '',
+        price: Number(item.price),
+        stock: Number(item.stock),
+        weight: Number(item.weight),
+        volume: Number(item.volume),
+        sales: item.suk,
+        attrValue: item.attrValue
+      }))
+    }
+  }
+
+  // 4. 处理商品详情
+  prodContent.value = res.content
+  thirdFormApi.setFieldValue('content', res.content)
 }
 
 const productRuleList = ref([])
@@ -265,6 +397,7 @@ label: '商品简介',
         treeCheckable: true,
         labelInValue: false,
         treeNodeFilterProp: 'label',
+        showCheckedStrategy: 'SHOW_PARENT',
       },
       fieldName: 'cateIds',
       label: '商品分类',
@@ -352,7 +485,7 @@ const [SecondForm, secondFormApi] = useVbenForm({
 
           // 转换数据格式
           specData.value = combinations.map(item => {
-            // 将每个规格组合转换为表格行数据
+            // 将每个规格组合转为表格行数据
             const rowData:any = {
               ...item, // 展开规格值作为独立列
               attrValue:JSON.stringify(item),
@@ -421,29 +554,25 @@ const [ThirdForm, thirdFormApi] = useVbenForm({
 
 const needMerge = ref(true);
 async function handleMergeSubmit() {
-
   let attrvalue:any[] = []
   let av = await secondFormApi.getValues()
-
-  const avnew = {...av,attrValue:JSON.stringify({规格:"默认"})}
-
-  console.log(specData.value);
-
+  const avnew = {...av, attrValue:JSON.stringify({规格:"默认"})}
 
   const values = await firstFormApi
     .merge(secondFormApi)
     .merge(thirdFormApi)
     .submitAllForm(needMerge.value)
-    //组装数据
 
-    values.cateId = values.cateIds.join(',')
-    values.type = 1
+  // 组装数据
+  values.cateId = values.cateIds.join(',')
+  values.type = 1
 
-    //选中的规格attr
-    // const ruleV = JSON.parse(productRuleList.value.find(item => item.id == values.selectRule).ruleValue)\
-    // ruleV.attrName = ruleV.value
-    // ruleV.
-    const attr = productRuleList.value.find(item => item.id == values.selectRule)
+  // 规格属性attrValue
+  values.attrValue = specData.value
+  values.specType = values.attrValue.length > 0 ? 1 : 0
+
+  // 处理规格属性
+  const attr = productRuleList.value.find(item => item.id == values.selectRule)
     if(attr) {
       const ruleValue = JSON.parse(attr.ruleValue)
       // 确保 values.attr 是一个数组
@@ -456,16 +585,11 @@ async function handleMergeSubmit() {
         })
       })
     }
+  // 调用保存接口
+  await saveProductApi(values)
 
-    attrvalue.push(avnew)
-    //规格属性attrValue
-    values.attrValue = specData.value
-    values.specType = values.attrValue.length > 0 ? 1 : 0
-
-    saveProductApi(values)
-  message.success({
-    content: `merged form values: ${JSON.stringify(values)}`,
-  });
+  message.success('保存成功')
+  // 保存成功后跳转到列表页
 }
 
 //获取规格值
@@ -571,6 +695,7 @@ const handleMainImageUpload = async (info: any) => {
     message.error('上传失败');
   }
 };
+
 
 </script>
 

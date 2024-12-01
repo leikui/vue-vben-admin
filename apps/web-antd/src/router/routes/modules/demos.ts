@@ -60,6 +60,9 @@ const routes: RouteRecordRaw[] = [
             meta: {
               title: '新增商品',
               hideInMenu: true,
+              hideChildrenInMenu: true,
+              hideInBreadcrumb: true,
+              hideInTab: true,
             },
             name: 'Add',
             path: '/demos/product/add',
