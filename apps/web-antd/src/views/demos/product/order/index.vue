@@ -245,7 +245,6 @@ const showDetail = async (id: string) => {
       <template #bodyCell="{ column, record }">
 
         <template v-if="column.key === 'action'">
-          <Button type="link" danger @click="showDeleteConfirm(record.orderId)">删除</Button>
           <Button type="link" @click="showDetail(record.orderId)">详情</Button>
 
         </template>

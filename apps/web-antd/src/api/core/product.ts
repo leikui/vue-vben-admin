@@ -35,6 +35,24 @@ export async function getProductInfoApi(params: any) {
 export async function saveProductApi(params: any) {
   return requestClient.post('/center/good/web/product/save',params);
 }
+/**
+ * 删除商品
+ */
+export async function deleteProductApi(params: any) {
+  return requestClient.post('/center/good/web/product/delete',params);
+}
+/**
+ * 商品上架
+ */
+export async function upProductApi(params: any) {
+  return requestClient.get('/center/good/web/product/putOnShell',params);
+}
+/**
+ * 商品下架
+ */
+export async function downProductApi(params: any) {
+  return requestClient.get('/center/good/web/product/offShell',params);
+}
 
 /**
  * 获取订单列表

@@ -17,7 +17,7 @@ import { PlusOutlined, LoadingOutlined } from '@ant-design/icons-vue';
 import { useVbenForm } from '#/adapter/form';
 import { useRouter } from 'vue-router';
 
-import { getProductApi } from '#/api';
+import { getProductApi, deleteProductApi, upProductApi, downProductApi } from '#/api';
 
 const router = useRouter();
 
@@ -98,6 +98,7 @@ watch(props.commonData, () => {
       fieldName: 'cateId',
     },
   ]);
+  formApi.submitForm();
 });
 
 onMounted(() => {
@@ -185,19 +186,41 @@ const updateProd = (id) => {
     }
   });
 }
-const delProd = (id) => {
+
+const delProd = async (id) => {
+  const res = await deleteProductApi({
+    id: id,
+  });
+  message.success('删除成功');
+  formApi.submitForm();
 
 }
+
+const upProduct = async (id, isShow) => {
+  console.log(id, isShow);
+  if (isShow) {
+    await upProductApi({
+      id: id,
+    });
+  } else {
+    await downProductApi({
+      id: id,
+    });
+  }
+  formApi.submitForm();
+}
+
+
 </script>
 <template>
   <Table :columns="columns" :data-source="data" :scroll="{ x: 1500 }" rowKey="id" :expand-column-width="100">
     <template #bodyCell="{ column, record }">
       <template v-if="column.key === 'action'">
         <Button type="primary" @click="updateProd(record.id)" >编辑</Button>
-        <Button type="text" danger @click="delProd(record.id)" >移入回收站</Button>
+        <Button type="text" danger @click="delProd(record.id)" >删除</Button>
       </template>
       <template v-if="column.key === 'isShow'">
-        <Switch v-model:checked="record.isShow" checked-children="上架" un-checked-children="下架" />
+        <Switch v-model:checked="record.isShow" checked-children="上架" un-checked-children="下架" @change="upProduct(record.id,record.isShow)" />
       </template>
       <template v-if="column.key === 'image'">
         <Image :width="30" :src="record.image" />

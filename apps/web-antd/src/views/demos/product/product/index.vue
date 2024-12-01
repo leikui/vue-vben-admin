@@ -51,8 +51,7 @@ const handleChange = (key) => {
       <TabPane key="1" tab="出售中商品"><DataTable :commonData="commonData"/></TabPane>
       <TabPane key="2" tab="仓库中商品"><DataTable :commonData="commonData"/></TabPane>
       <TabPane key="3" tab="已售罄商品"><DataTable :commonData="commonData"/></TabPane>
-      <TabPane key="4" tab="警戒库存"><DataTable :commonData="commonData"/></TabPane>
-      <TabPane key="5" tab="商品回收站"><DataTable :commonData="commonData"/></TabPane>
+      <TabPane key="5" tab="已删除商品"><DataTable :commonData="commonData"/></TabPane>
     </Tabs>
 
 

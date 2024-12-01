@@ -109,7 +109,7 @@ const handleUploadChange = async (info: any) => {
     loading.value = false;
     if (response.url) {
       firstImageUrl.value = fileList.value.map(file => file.response?.url || file.url);
-      firstFormApi.setFieldValue('sliderImages', firstImageUrl.value.join(','));
+      firstFormApi.setFieldValue('sliderImage', firstImageUrl.value.join(','));
       message.success('上传成功');
     } else {
       message.error('上传失败');
@@ -128,7 +128,7 @@ const handleRemove = (file: any) => {
   fileList.value = newFileList;
 
   firstImageUrl.value = newFileList.map(file => file.response?.url || file.url);
-  firstFormApi.setFieldValue('sliderImages', firstImageUrl.value.join(','));
+  firstFormApi.setFieldValue('sliderImage', firstImageUrl.value.join(','));
   return true;
 };
 
@@ -222,7 +222,16 @@ const [FirstForm, firstFormApi] = useVbenForm({
       label: '商品名称',
       // rules: 'required',
     },
+    {
 
+component: 'Input',
+componentProps: {
+  placeholder: '请输入',
+},
+fieldName: 'storeInfo',
+label: '商品简介',
+// rules: 'required',
+},
     {
       component: 'Input',
       componentProps: {
@@ -235,8 +244,13 @@ const [FirstForm, firstFormApi] = useVbenForm({
 
     {
       component: 'Input',
+      fieldName: 'image',
+      label: '商品主图',
+    },
+    {
+      component: 'Input',
 
-      fieldName: 'sliderImages',
+      fieldName: 'sliderImage',
       label: '商品轮播图',
       // rules: 'required',
     },
@@ -278,6 +292,7 @@ const [FirstForm, firstFormApi] = useVbenForm({
       rules:'required',
       defaultValue: 0,
     },
+
 
   ],
   submitButtonOptions: {
@@ -325,10 +340,12 @@ const [SecondForm, secondFormApi] = useVbenForm({
             {title:'图片',dataIndex:'image'},
             {title:'售价',dataIndex:'price'},
             {title:'库存',dataIndex:'stock'},
-            {title:'商品编号',dataIndex:'sales'},
             {title:'重量',dataIndex:'weight'},
             {title:'体积',dataIndex:'volume'},
-            {title:'操作',dataIndex:'action'}
+            {title:'商品编号',dataIndex:'sales'},
+
+            {title:'操作',dataIndex:'action'},
+
           ];
 
           console.log(combinations);
@@ -341,7 +358,7 @@ const [SecondForm, secondFormApi] = useVbenForm({
               attrValue:JSON.stringify(item),
               image: '', // 图片列
               price: 0, // 售价列
-              stock: 0, // 库存列
+              stock: 1000, // 库存列
               sales: '', // 商品编号列
               weight: 0, // 重量列
               volume: 0, // 体积列
@@ -367,153 +384,7 @@ const [SecondForm, secondFormApi] = useVbenForm({
       label: '商品属性',
       // rules: 'required',
     },
-    // {
-    //   component: 'InputNumber',
-    //   componentProps: {
-    //     min: 0,
-    //     step:0.01,
-    //     precision: 2,
-    //     addonAfter:"元"
-    //   },
-    //   dependencies: {
-    //     if(values) {
-    //       return values.radioGroup == 1;
-    //     },
-    //     // 只有指定的字段改变时，才会触发
-    //     triggerFields: ['radioGroup'],
-    //   },
-    //   fieldName: 'price',
-    //   label: '售价',
-    //   rules:'required',
-    //   defaultValue: 0,
-    // },
-    // {
-    //   component: 'InputNumber',
-    //   componentProps: {
-    //     min: 0,
-    //     step:0.01,
-    //     precision: 2,
-    //     addonAfter:"元"
-    //   },
-    //   dependencies: {
-    //     if(values) {
-    //       return values.radioGroup == 1;
-    //     },
-    //     // 只有指定的字段改变时，才会触发
-    //     triggerFields: ['radioGroup'],
-    //   },
-    //   fieldName: 'cost',
-    //   label: '成本价',
-    //   defaultValue: 0,
-    // },
-    // {
-    //   component: 'InputNumber',
-    //   componentProps: {
-    //     min: 0,
-    //     step:0.01,
-    //     precision: 2,
-    //     addonAfter:"元"
-    //   },
-    //   dependencies: {
-    //     if(values) {
-    //       return values.radioGroup == 1;
-    //     },
-    //     // 只有指定的字段改变时，才会触发
-    //     triggerFields: ['radioGroup'],
-    //   },
-    //   fieldName: 'otPrice',
-    //   label: '划线价',
-    //   defaultValue: 0,
-    // },
-    // {
-    //   component: 'InputNumber',
-    //   componentProps: {
-    //     min: 0,
-    //     addonAfter:"件"
-    //   },
-    //   dependencies: {
-    //     if(values) {
-    //       return values.radioGroup == 1;
-    //     },
-    //     // 只有指定的字段改变时，才会触发
-    //     triggerFields: ['radioGroup'],
-    //   },
-    //   fieldName: 'stock',
-    //   label: '库存',
-    //   defaultValue: 10000,
-    // },
-    // {
-    //   component: 'Input',
-    //   dependencies: {
-    //     if(values) {
-    //       return values.radioGroup == 1;
-    //     },
-    //     // 只有指定的字段改变时，才会触发
-    //     triggerFields: ['radioGroup'],
-    //   },
-    //   fieldName: 'barCode',
-    //   label: '商品编码',
 
-    // },
-
-    // {
-    //   component: 'InputNumber',
-    //   componentProps: {
-    //     min: 0,
-    //     addonAfter:"件"
-    //   },
-
-    //   fieldName: 'ficti',
-    //   label: '虚拟销量',
-    //   defaultValue: 0,
-    // },
-    // {
-    //   component: 'Input',
-
-    //   dependencies: {
-    //     if(values) {
-    //       return values.radioGroup == 1;
-    //     },
-    //     // 只有指定的字段改变时，才会触发
-    //     triggerFields: ['radioGroup'],
-    //   },
-    //   fieldName: 'field1',
-    //   label: '条形码',
-    //   rules:'required',
-    // },
-    // {
-    //   component: 'InputNumber',
-    //   componentProps: {
-    //     min: 0,
-    //   },
-    //   dependencies: {
-    //     if(values) {
-    //       return values.radioGroup == 1;
-    //     },
-    //     // 只有指定的字段改变时，才会触发
-    //     triggerFields: ['radioGroup'],
-    //   },
-    //   defaultValue: 0,
-    //   fieldName: 'weight',
-    //   label: '重量',
-    // },
-    // {
-    //   component: 'InputNumber',
-    //   componentProps: {
-    //     min: 0,
-    //     addonAfter:"m³"
-    //   },
-    //   dependencies: {
-    //     if(values) {
-    //       return values.radioGroup == 1;
-    //     },
-    //     // 只有指定的字段改变时，才会触发
-    //     triggerFields: ['radioGroup'],
-    //   },
-    //   defaultValue: 0,
-    //   fieldName: 'volume',
-    //   label: '体积',
-    // },
   ],
   submitButtonOptions: {
     content: '下一步',
@@ -564,7 +435,7 @@ async function handleMergeSubmit() {
     .merge(thirdFormApi)
     .submitAllForm(needMerge.value)
     //组装数据
-    values.specType = 0
+
     values.cateId = values.cateIds.join(',')
     values.type = 1
 
@@ -572,13 +443,25 @@ async function handleMergeSubmit() {
     // const ruleV = JSON.parse(productRuleList.value.find(item => item.id == values.selectRule).ruleValue)\
     // ruleV.attrName = ruleV.value
     // ruleV.
-
-    values.attr = [productRuleList.value.find(item => item.id == values.selectRule)]
-    console.log(avnew);
+    const attr = productRuleList.value.find(item => item.id == values.selectRule)
+    if(attr) {
+      const ruleValue = JSON.parse(attr.ruleValue)
+      // 确保 values.attr 是一个数组
+      values.attr = []
+      // 将解析后的规格值添加到数组中
+      ruleValue.forEach((item:any) => {
+        values.attr.push({
+          attrName: item.value,
+          attrValues: item.detail.join(',')
+        })
+      })
+    }
 
     attrvalue.push(avnew)
     //规格属性attrValue
-    values.attrValue = attrvalue
+    values.attrValue = specData.value
+    values.specType = values.attrValue.length > 0 ? 1 : 0
+
     saveProductApi(values)
   message.success({
     content: `merged form values: ${JSON.stringify(values)}`,
@@ -655,6 +538,40 @@ function getBase64(file: File) {
   });
 }
 
+function handleSpecDelete(record: any) {
+  specData.value = specData.value.filter(item => item !== record);
+}
+
+// 添加主图上传相关变量和方法
+const mainImageUrl = ref<string>('');
+const mainImageLoading = ref<boolean>(false);
+const mainImageFileList = ref<UploadProps['fileList']>([]);
+
+// 处理主图上传
+const handleMainImageUpload = async (info: any) => {
+  const { status, response } = info.file;
+  mainImageFileList.value = info.fileList;
+
+  if (status === 'uploading') {
+    mainImageLoading.value = true;
+    return;
+  }
+
+  if (status === 'done') {
+    mainImageLoading.value = false;
+    if (response.url) {
+      mainImageUrl.value = response.url;
+      firstFormApi.setFieldValue('image', response.url);
+      message.success('上传成功');
+    } else {
+      message.error('上传失败');
+    }
+  } else if (status === 'error') {
+    mainImageLoading.value = false;
+    message.error('上传失败');
+  }
+};
+
 </script>
 
 <template>
@@ -669,7 +586,7 @@ function getBase64(file: File) {
         </Steps>
         <div class="p-10">
           <FirstForm v-show="currentTab === 0">
-            <template #sliderImages>
+            <template #sliderImage>
               <div class="clearfix">
                 <Upload
                   v-model:file-list="fileList"
@@ -692,6 +609,24 @@ function getBase64(file: File) {
                 >
                   <img alt="预图片" style="width: 100%" :src="previewImage" />
                 </Modal>
+              </div>
+            </template>
+            <template #image>
+              <div class="clearfix">
+                <Upload
+                  v-model:file-list="mainImageFileList"
+                  :maxCount="1"
+                  list-type="picture-card"
+                  :before-upload="beforeUpload"
+                  :custom-request="customRequest"
+                  @change="handleMainImageUpload"
+                  @preview="handlePreview"
+                >
+                  <div v-if="mainImageFileList.length < 1">
+                    <PlusOutlined />
+                    <div style="margin-top: 8px">上传主图</div>
+                  </div>
+                </Upload>
               </div>
             </template>
           </FirstForm>
@@ -726,18 +661,18 @@ function getBase64(file: File) {
                           return false;
                         }"
                         listType="picture-card"
-                        :style="{width: '40px', height: '40px'}"
+                        class="spec-upload"
                       >
                         <div v-if="!record.image" style="width: 40px; height: 40px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                          <PlusOutlined style="font-size: 14px;" />
-                          <div style="margin-top: 4px; font-size: 12px;">上传</div>
+                          <PlusOutlined style="font-size: 12px;" />
+                          <div style="margin-top: 2px; font-size: 10px;">上传</div>
                         </div>
                         <div v-else class="relative" style="width: 40px; height: 40px;">
                           <img :src="record.image" style="width: 40px; height: 40px; object-fit: cover;" />
                           <Button
                             type="link"
-                            class="absolute top-0 right-0 text-red-500"
-                            style="padding: 0; height: auto; font-size: 12px;"
+                            class="absolute bottom-0 left-0 right-0 text-red-500 bg-white/80"
+                            style="padding: 0; height: auto; font-size: 10px;"
                             @click.stop="(e) => {
                               e.stopPropagation();
                               handleSpecImageRemove(record);
@@ -748,14 +683,18 @@ function getBase64(file: File) {
                         </div>
                       </Upload>
                     </template>
-                    <template v-else-if="column.dataIndex === 'sales'">
-                      <Input v-model:value="record.sales" />
-                    </template>
+
                     <template v-else-if="column.dataIndex === 'weight'">
-                      <InputNumber v-model:value="record.weight" :min="0" />
+                      <InputNumber v-model:value="record.weight" :min="0" :addon-after="'kg'" />
                     </template>
                     <template v-else-if="column.dataIndex === 'volume'">
                       <InputNumber v-model:value="record.volume" :min="0" :addon-after="'m³'" />
+                    </template>
+                    <template v-else-if="column.dataIndex === 'sales'">
+                      <Input v-model:value="record.sales" />
+                    </template>
+                    <template v-else-if="column.dataIndex === 'action'">
+                      <Button type="link" @click="handleSpecDelete(record)">删除</Button>
                     </template>
                   </template>
                 </Table>
@@ -775,30 +714,17 @@ function getBase64(file: File) {
   </Page>
 </template>
 
-<style scoped>
-.ant-upload-select-picture-card i {
-  font-size: 32px;
-  color: #999;
-}
+<style lang="less" scoped>
+:deep(.spec-upload) {
+  .ant-upload.ant-upload-select {
+    width: 40px !important;
+    height: 40px !important;
+    margin: 0 !important;
+  }
 
-.ant-upload-select-picture-card .ant-upload-text {
-  margin-top: 8px;
-  color: #666;
-}
-
-/* 规格表格中的上传组件样式 */
-.ant-table :deep(.ant-upload-list-picture-card .ant-upload-list-item) {
-  width: 40px !important;
-  height: 40px !important;
-}
-
-.ant-table :deep(.ant-upload-select-picture-card) {
-  width: 40px !important;
-  height: 40px !important;
-}
-
-.ant-table :deep(.ant-upload-list-picture-card-container) {
-  width: 40px !important;
-  height: 40px !important;
+  .ant-upload-list-item {
+    width: 40px !important;
+    height: 40px !important;
+  }
 }
 </style>
