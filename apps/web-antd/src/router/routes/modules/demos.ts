@@ -10,26 +10,19 @@ const routes: RouteRecordRaw[] = [
       icon: 'ic:baseline-view-in-ar',
       keepAlive: true,
       order: 1000,
-      title: $t('demos.title'),
+      title: '商城',
     },
     name: 'Demos',
     path: '/demos',
     children: [
-      {
-        meta: {
-          title: $t('demos.antd'),
-        },
-        name: 'AntDesignDemos',
-        path: '/demos/ant-design',
-        component: () => import('#/views/demos/antd/index.vue'),
-      },
+
 
 
       {
         meta: {
           title: '商品',
         },
-        name: 'Category',
+        name: 'Poducts',
         path: '/demos/product',
         children: [
           {
@@ -74,7 +67,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           title: '订单',
         },
-        name: 'Order',
+        name: 'Orders',
         path: '/demos/order',
         children: [
           {
