@@ -111,3 +111,10 @@ export async function saveProductRuleApi(params: any) {
 export async function updateProductRuleApi(params: any) {
   return requestClient.post('/center/good/product/rule/update', params );
 }
+
+/**
+ * 获取开票列表
+ */
+export async function getInvoiceListApi(params: any) {
+  return requestClient.get('/center/good/invoice/list', params );
+}

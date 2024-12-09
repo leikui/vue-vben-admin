@@ -78,7 +78,14 @@ const routes: RouteRecordRaw[] = [
             path: '/demos/product/order',
             component: () => import('#/views/demos/product/order/index.vue'),
           },
-
+          {
+            meta: {
+              title: '开票管理',
+            },
+            name: 'Invoice',
+            path: '/demos/product/invoice',
+            component: () => import('#/views/demos/product/invoice/index.vue'),
+          },
         ]
       },
 
