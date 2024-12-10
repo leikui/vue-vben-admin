@@ -6,7 +6,7 @@ import { Page, useVbenModal } from '@vben/common-ui';
 import { message, Table, Button, Card, Image, Switch, Modal } from 'ant-design-vue';
 import dayjs, { Dayjs } from 'dayjs';
 import { useVbenForm } from '#/adapter/form';
-import { getInvoiceListApi } from '#/api';
+import { getInvoiceListApi,getProductOrderDetailApi } from '#/api';
 
 
 const rangePresets = ref([
@@ -84,22 +84,22 @@ onMounted(() => {
 
 // table
 const columns = ref([
-  {
-    title: '申请编号',
-    dataIndex: 'invoiceId',
-    key: 'invoiceId',
-    width: 180,
-  },
+  // {
+  //   title: '申请编号',
+  //   dataIndex: 'invoiceId',
+  //   key: 'invoiceId',
+  //   width: 180,
+  // },
   {
     title: '订单编号',
-    dataIndex: 'orderId',
-    key: 'orderId',
+    dataIndex: 'orderNo',
+    key: 'orderNo',
     width: 180,
   },
   {
     title: '申请时间',
-    dataIndex: 'createTime',
-    key: 'createTime',
+    dataIndex: 'createDate',
+    key: 'createDate',
     width: 180,
   },
   {
@@ -110,8 +110,8 @@ const columns = ref([
   },
   {
     title: '发票类型',
-    dataIndex: 'invoiceType',
-    key: 'invoiceType',
+    dataIndex: 'type',
+    key: 'type',
     width: 120,
   },
   {
@@ -181,13 +181,23 @@ const showDetail = async (id: string) => {
       <QueryForm />
     </Card>
 
-    <Table :columns="columns" :data-source="dataSource" :pagination="pagination" @change="handleTableChange" rowKey="orderId" bordered :scroll="{ x: 1000 }"
+    <Table :columns="columns" :data-source="dataSource" :pagination="pagination" @change="handleTableChange" rowKey="orderNo" bordered :scroll="{ x: 1000 }"
       :expand-column-width="30">
       <template #bodyCell="{ column, record }">
 
         <template v-if="column.key === 'action'">
-          <Button type="link" @click="showDetail(record.orderId)">详情</Button>
+          <Button type="link" @click="showDetail(record.orderNo)">订单详情</Button>
 
+        </template>
+        <template v-if="column.key === 'type'">
+         <div v-if="record.type === 'personal'">个人</div>
+         <div v-else>单位</div>
+        </template>
+      <template v-if="column.key === 'status'">
+         <div v-if="record.status === 1">待开票</div>
+         <div v-else-if="record.status === 2">已开票</div>
+         <div v-else-if="record.status === 0">订单待支付</div>
+         <div v-else>未知</div>
         </template>
         <template v-if="column.key === 'productList'">
           <div v-for="item in record.productList" :key="item.id">
@@ -207,14 +217,48 @@ const showDetail = async (id: string) => {
 
       </template>
       <template #expandedRowRender="{ record }">
-        <div v-for="item in record.productList" :key="item.id" class="mb-4">
-          <div style="display: flex; align-items: center; margin-bottom: 8px;">
-            <Image :height="80" :width="80" :src="item.info.image" alt="商品图片" style="margin-right: 16px;" />
+        <div class="p-4">
+          <div class="mb-4">
+            <div class="font-bold mb-2">发票信息</div>
             <div class="ml-4">
-              <div style="font-size: 14px; margin-bottom: 8px;">{{ item.info.productName }}</div>
-              <div style="color: #999;">规格: {{ item.info.sku }}</div>
-              <div style="color: #f5222d; font-size: 16px;">¥{{ item.info.price }}</div>
-              <div style="color: #999;">数量: {{ item.info.payNum }}</div>
+              <template v-if="record.type === 'personal'">
+                <!-- 个人发票信息 -->
+                <div>发票类型：个人</div>
+                <div>发票抬头：{{ record.title }}</div>
+                <div>开票金额：{{ record.amount }}</div>
+                <div>开票状态：
+                  <span v-if="record.status === 1" class="text-orange-500">待开票</span>
+                  <span v-else-if="record.status === 2" class="text-green-500">已开票</span>
+                  <span v-else class="text-gray-500">未知</span>
+                </div>
+                <div>收票人电话：{{ record.receiverMoile || '-' }}</div>
+                <div>收票人邮箱：{{ record.receiverEmail || '-' }}</div>
+                <div>申请时间：{{ record.createDate }}</div>
+                <div>开票时间：{{ record.invoiceTime || '-' }}</div>
+                <div>发票备注：{{ record.remark || '-' }}</div>
+              </template>
+
+              <template v-else>
+                <!-- 单位发票信息 -->
+                <div>发票类型：单位</div>
+                <div>发票抬头：{{ record.title }}</div>
+                <div>税号：{{ record.taxNumber }}</div>
+                <div>开票金额：{{ record.amount }}</div>
+                <div>开票状态：
+                  <span v-if="record.status === 1" class="text-orange-500">待开票</span>
+                  <span v-else-if="record.status === 2" class="text-green-500">已开票</span>
+                  <span v-else class="text-gray-500">未知</span>
+                </div>
+                <div>注册地址：{{ record.registerAddress || '-' }}</div>
+                <div>注册电话：{{ record.registerTelephone || '-' }}</div>
+                <div>开户银行：{{ record.bankName || '-' }}</div>
+                <div>银行账号：{{ record.bankAccount || '-' }}</div>
+                <div>收票人电话：{{ record.receiverMoile || '-' }}</div>
+                <div>收票人邮箱：{{ record.receiverEmail || '-' }}</div>
+                <div>申请时间：{{ record.createDate }}</div>
+                <div>开票时间：{{ record.invoiceTime || '-' }}</div>
+                <div>发票备注：{{ record.remark || '-' }}</div>
+              </template>
             </div>
           </div>
         </div>
@@ -224,39 +268,87 @@ const showDetail = async (id: string) => {
     <ModalCom />
     <div>
 
-    <ModalDetail class="w-[600px]" title="订单详情">
-      <div class="p-4">
-        <div class="mb-4">
-          <div class="font-bold mb-2">用户信息</div>
-          <div class="ml-4">
-            <div>用户昵称：{{ orderDetail?.nikeName }}</div>
-            <div>绑定电话：{{ orderDetail?.phone }}</div>
+    <ModalDetail class="w-[800px]" title="订单详情">
+      <div class="">
+        <div class="mb-2 bg-gray-50 rounded-lg p-3">
+          <div class="font-bold mb-3 text-lg border-b pb-2">用户信息</div>
+          <div class="ml-4 grid grid-cols-2 gap-3">
+            <div class="flex items-center">
+              <span class="text-gray-500 w-24">用户昵称：</span>
+              <span>{{ orderDetail?.nikeName }}</span>
+            </div>
+            <div class="flex items-center">
+              <span class="text-gray-500 w-24">绑定电话：</span>
+              <span>{{ orderDetail?.phone }}</span>
+            </div>
           </div>
         </div>
 
-        <div class="mb-4">
-          <div class="font-bold mb-2">收货信息</div>
-          <div class="ml-4">
-            <div>收货人：{{ orderDetail?.realName }}</div>
-            <div>收货电话：{{ orderDetail?.userPhone }}</div>
-            <div>收货地址：{{ orderDetail?.userAddress }}</div>
+        <div class="mb-2 bg-gray-50 rounded-lg p-3">
+          <div class="font-bold mb-3 text-lg border-b pb-2">收货信息</div>
+          <div class="ml-4 space-y-3">
+            <div class="flex items-center">
+              <span class="text-gray-500 w-24">收货人：</span>
+              <span>{{ orderDetail?.realName }}</span>
+            </div>
+            <div class="flex items-center">
+              <span class="text-gray-500 w-24">收货电话：</span>
+              <span>{{ orderDetail?.userPhone }}</span>
+            </div>
+            <div class="flex items-center">
+              <span class="text-gray-500 w-24">收货地址：</span>
+              <span>{{ orderDetail?.userAddress }}</span>
+            </div>
           </div>
         </div>
 
-        <div class="mb-4">
-          <div class="font-bold mb-2">订单信息</div>
-          <div class="ml-4">
-            <div>订单编号：{{ orderDetail?.orderId }}</div>
-            <div class="text-red-500">订单状态：{{ orderDetail?.statusStr.value }}</div>
-            <div>商品总数：{{ orderDetail?.totalNum }}</div>
-            <div>商品总价：{{ orderDetail?.totalPrice }}</div>
-            <div>支付邮费：{{ orderDetail?.payPostage }}</div>
-            <div>实际支付：{{ orderDetail?.payPrice }}</div>
-            <div>退款金额：{{ orderDetail?.refundPrice }}</div>
-            <div>创建时间：{{ orderDetail?.createTime }}</div>
-            <div>支付方式：{{ orderDetail?.payTypeStr }}</div>
-            <div>推广人：{{ orderDetail?.spreadUser || '-' }}</div>
-            <div>商家备注：{{ orderDetail?.remark || '' }}</div>
+        <div class="mb-2 bg-gray-50 rounded-lg p-3">
+          <div class="font-bold mb-3 text-lg border-b pb-2">订单信息</div>
+          <div class="ml-4 grid grid-cols-2 gap-3">
+            <div class="flex items-center">
+              <span class="text-gray-500 w-24">订单编号：</span>
+              <span>{{ orderDetail?.orderId }}</span>
+            </div>
+            <div class="flex items-center">
+              <span class="text-gray-500 w-24">订单状态：</span>
+              <span class="text-red-500 font-medium">{{ orderDetail?.statusStr.value }}</span>
+            </div>
+            <div class="flex items-center">
+              <span class="text-gray-500 w-24">商品总数：</span>
+              <span>{{ orderDetail?.totalNum }}</span>
+            </div>
+            <div class="flex items-center">
+              <span class="text-gray-500 w-24">商品总价：</span>
+              <span class="text-orange-500">¥{{ orderDetail?.totalPrice }}</span>
+            </div>
+            <div class="flex items-center">
+              <span class="text-gray-500 w-24">支付邮费：</span>
+              <span>¥{{ orderDetail?.payPostage }}</span>
+            </div>
+            <div class="flex items-center">
+              <span class="text-gray-500 w-24">实际支付：</span>
+              <span class="text-orange-500 font-medium">¥{{ orderDetail?.payPrice }}</span>
+            </div>
+            <div class="flex items-center">
+              <span class="text-gray-500 w-24">退款金额：</span>
+              <span class="text-red-500">¥{{ orderDetail?.refundPrice }}</span>
+            </div>
+            <div class="flex items-center">
+              <span class="text-gray-500 w-24">支付方式：</span>
+              <span>{{ orderDetail?.payTypeStr }}</span>
+            </div>
+            <div class="flex items-center">
+              <span class="text-gray-500 w-24">创建时间：</span>
+              <span>{{ orderDetail?.createTime }}</span>
+            </div>
+            <div class="flex items-center">
+              <span class="text-gray-500 w-24">推广人：</span>
+              <span>{{ orderDetail?.spreadUser || '-' }}</span>
+            </div>
+            <div class="col-span-2 flex items-start">
+              <span class="text-gray-500 w-24">商家备注：</span>
+              <span>{{ orderDetail?.remark || '-' }}</span>
+            </div>
           </div>
         </div>
       </div>
