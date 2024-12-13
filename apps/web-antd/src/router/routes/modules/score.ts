@@ -17,30 +17,20 @@ const routes: RouteRecordRaw[] = [
     meta: {
       icon: "ic:baseline-view-in-ar",
       order: 9999,
-      title:'医生后台管理',
-      link: 'https://www.baidu.com',
-      openInNewWindow: true,
-      authority: ['doctor'],
-
-    },
-    name: 'VbenProject',
-    path: '/vben-admin',
-
-  },
-  {
-    component: BasicLayout,
-    meta: {
+      title:'积分管理',
       authority: ['admin'],
-      icon: "ic:baseline-view-in-ar",
-      order: 9999,
-      title:'管理员后台管理',
-      link: 'https://www.baidu.com',
-      openInNewWindow: true,
     },
-    name: 'VbenProject',
-    path: '/vben-admin',
-
+    name: 'Scores',
+    path: '/demos',
+    children: [
+      {
+        name: '用户积分列表',
+        path: '/demos/score',
+        component: () => import('#/views/demos/score/index.vue'),
+      },
+    ],
   },
+
 ];
 
 export default routes;
