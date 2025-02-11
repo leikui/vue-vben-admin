@@ -143,30 +143,35 @@ const getProductInfo = async (productId: string) => {
       attrValue: item.attrValue
     }))
   } else {
-    // 多规格模式处理逻辑保持不变
+    // 多规格模式处理逻辑
     const ruleList = await getProductRuleListApi({page:1,limit:9999})
     const matchedRule = ruleList.list.find(rule => {
       const ruleValue = JSON.parse(rule.ruleValue)
-      return ruleValue.some(item =>
-        res.attr.some(attr => attr.attrName === item.value)
-      )
+      // 修改匹配逻辑，确保规格名称完全匹配
+      const ruleNames = ruleValue.map((item: any) => item.value).sort()
+      const attrNames = res.attr.map((attr: any) => attr.attrName).sort()
+      return JSON.stringify(ruleNames) === JSON.stringify(attrNames)
     })
 
     if (matchedRule) {
+      // 先设置规格值，触发handleRuleChange
       secondFormApi.setFieldValue('selectRule', matchedRule.id)
       handleRuleChange(matchedRule.id)
 
       // 用服务端返回的数据覆盖本地生成的规格数据
-      specData.value = res.attrValue.map(item => ({
-        ...JSON.parse(item.attrValue),
-        image: item.image || '',
-        price: Number(item.price),
-        stock: Number(item.stock),
-        weight: Number(item.weight),
-        volume: Number(item.volume),
-        sales: item.suk,
-        attrValue: item.attrValue
-      }))
+      specData.value = res.attrValue.map(item => {
+        const attrValueObj = JSON.parse(item.attrValue)
+        return {
+          ...attrValueObj,
+          image: item.image || '',
+          price: Number(item.price),
+          stock: Number(item.stock),
+          weight: Number(item.weight),
+          volume: Number(item.volume),
+          sales: item.suk,
+          attrValue: item.attrValue
+        }
+      })
     }
   }
 
