@@ -213,7 +213,7 @@ const upProduct = async (id, isShow) => {
 
 </script>
 <template>
-  <Table :columns="columns" :data-source="data" :scroll="{ x: 1500 }" rowKey="id" :expand-column-width="100">
+  <Table :columns="columns" :data-source="data" :scroll="{ x: 1200 }" rowKey="id" :expand-column-width="100">
     <template #bodyCell="{ column, record }">
       <template v-if="column.key === 'action'">
         <Button type="primary" @click="updateProd(record.id)" >编辑</Button>

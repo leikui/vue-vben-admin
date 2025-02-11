@@ -16,8 +16,6 @@ const routes: RouteRecordRaw[] = [
     path: '/demos',
     children: [
 
-
-
       {
         meta: {
           title: '商品',
@@ -88,7 +86,26 @@ const routes: RouteRecordRaw[] = [
           },
         ]
       },
-
+  {
+    meta: {
+      icon: "ic:baseline-view-in-ar",
+      order: 9999,
+      title:'积分管理',
+      authority: ['admin'],
+    },
+    name: 'Scores',
+    path: '/scores',
+    children: [
+      {
+        name: 'score',
+        path: '/demos/score',
+        meta: {
+          title: '用户积分列表',
+        },
+        component: () => import('#/views/demos/score/index.vue'),
+      },
+    ],
+  },
     ],
   },
 ];

@@ -105,11 +105,11 @@ export const useAuthStore = defineStore('auth', () => {
     const res = await getDictAllAPI()
 
     let url = ''
-    if (!['doctor'].includes(userInfo?.roleCode) ) {
-      url = '/demos/admin'
-    }else{
-      url = '/'
-    }
+    // if (!['doctor'].includes(userInfo?.roleCode) ) {
+    //   url = '/demos/admin'
+    // }else{
+    //   url = '/'
+    // }
 
     userInfos = {
      ...userInfos,
