@@ -163,11 +163,11 @@ const [BaseForm, formApi] = useVbenForm({
   wrapperClass: 'grid-cols-1 md:grid-cols-1',
 });
 
-function onSubmit(values: Record<string, any>) {
-  message.success({
-    content: `form values: ${JSON.stringify(values)}`,
-  });
-}
+// function onSubmit(values: Record<string, any>) {
+//   message.success({
+//     content: `form values: ${JSON.stringify(values)}`,
+//   });
+// }
 
 
 //上传组件

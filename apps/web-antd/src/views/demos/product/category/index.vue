@@ -86,9 +86,9 @@ const [QueryForm, form] = useVbenForm({
 async function onSubmit(values: Record<string, any>) {
   const res = await getCategoryApi({ ...values, page: 1, limit: 9999,type:1 });
   dataSource.value = res;
-  message.success({
-    content: `form values: ${JSON.stringify(values)}`,
-  });
+  // message.success({
+  //   content: `form values: ${JSON.stringify(values)}`,
+  // });
 }
 
 onMounted(() => {

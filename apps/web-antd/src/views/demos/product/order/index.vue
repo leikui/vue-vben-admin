@@ -126,9 +126,9 @@ async function onSubmit(values: Record<string, any>) {
   });
   dataSource.value = res.list;
   pagination.value.total = res.total; // 假设API返回总数
-  message.success({
-    content: `form values: ${JSON.stringify(values)}`,
-  });
+  // message.success({
+  //   content: `form values: ${JSON.stringify(values)}`,
+  // });
 }
 
 onMounted(() => {

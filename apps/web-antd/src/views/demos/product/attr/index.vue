@@ -49,9 +49,9 @@ const [QueryForm, form] = useVbenForm({
 async function onSubmit(values: Record<string, any>) {
   const res = await getProductRuleListApi({ ...values, page: 1, pageSize: 999 });
   dataSource.value = res.list;
-  message.success({
-    content: `form values: ${JSON.stringify(values)}`,
-  });
+  // message.success({
+  //   content: `form values: ${JSON.stringify(values)}`,
+  // });
 }
 
 onMounted(() => {

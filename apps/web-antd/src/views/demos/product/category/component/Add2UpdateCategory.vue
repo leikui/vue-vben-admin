@@ -163,9 +163,9 @@ const [BaseForm, formApi] = useVbenForm({
 });
 
 function onSubmit(values: Record<string, any>) {
-  message.success({
-    content: `form values: ${JSON.stringify(values)}`,
-  });
+  // message.success({
+  //   content: `form values: ${JSON.stringify(values)}`,
+  // });
   if (values.pid == null || values.pid == '' || values.pid == undefined) {
     values.pid = 0;
   }

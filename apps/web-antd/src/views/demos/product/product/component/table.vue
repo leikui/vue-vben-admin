@@ -165,9 +165,9 @@ async function onSubmit(values: Record<string, any>) {
     pageSize: 10,
   });
   data.value = res.list;
-  message.success({
-    content: `form values: ${JSON.stringify(values)}`,
-  });
+  // message.success({
+  //   content: `form values: ${JSON.stringify(values)}`,
+  // });
 }
 
 const toAdd = () => {

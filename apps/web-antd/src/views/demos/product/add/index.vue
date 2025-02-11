@@ -311,9 +311,9 @@ const customRequest = async ({ file, onSuccess, onError }: any) => {
 
 const currentTab = ref(0);
 async function onFirstSubmit(values: Record<string, any>) {
-  message.success({
-    content: `form1 values: ${JSON.stringify(values)}`,
-  });
+  // message.success({
+  //   content: `form1 values: ${JSON.stringify(values)}`,
+  // });
   await firstFormApi.getValues();
   currentTab.value = 1;
 }
@@ -323,17 +323,17 @@ function onSecondReset() {
 }
 function onSecondSubmit(values: Record<string, any>) {
   currentTab.value = 2;
-  message.success({
-    content: `form3 values: ${JSON.stringify(values)}`,
-  });
+  // message.success({
+  //   content: `form3 values: ${JSON.stringify(values)}`,
+  // });
 }
 function onThirdReset() {
   currentTab.value = 1;
 }
 function onThirdSubmit(values: Record<string, any>) {
-  message.success({
-    content: `form3 values: ${JSON.stringify(values)}`,
-  });
+  // message.success({
+  //   content: `form3 values: ${JSON.stringify(values)}`,
+  // });
 }
 
 
